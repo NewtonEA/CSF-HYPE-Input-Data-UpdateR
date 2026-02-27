@@ -2,31 +2,76 @@
 .Rhistory
 .RData
 .Ruserdata
-#non project folders
+
+# non project folders
 misc/
 Pesticides/
 status_tracking/
-# Large data
+
+# Large data files
 *.log
 *.zip
 *.7z
 *.nc
 *.rds
 *.accdb
-PointSourceData/Discharges/api_cache/*
-PointSourceData/Discharges/data_in/stw_flow_data/collated_data/*
-PointSourceData/Discharges/data_in/stw_flow_data/new_exports/*
-PointSourceData/Discharges/data_in/CattleInStreams/*
-PointSourceData/Discharges/data_out/*
-PointSourceData/Abstractions/data_in/returns_data/*
-PointSourceData/Abstractions/data_in/returns_details/*
-PointSourceData/Abstractions/data_in/WRGIS_data/*
-PointSourceData/Abstractions/data_out/WRGIS_data/*
-GeoData/*
-ForcingData/Rainfall/*
-ForcingData/Temperature/*
-ForcingData/HadUKRaw/*
-QObs/data_in/Flow_data/*
-QObs/data_out/*
-XobsData/*
+
+# ---- Point Source ----
+PointSourceData/Discharges/api_cache/
+PointSourceData/Discharges/data_in/stw_flow_data/collated_data/
+PointSourceData/Discharges/data_in/stw_flow_data/new_exports/
+PointSourceData/Discharges/data_in/CattleInStreams/
+PointSourceData/Discharges/data_out/
+PointSourceData/Abstractions/data_in/returns_data/
+PointSourceData/Abstractions/data_in/returns_details/
+PointSourceData/Abstractions/data_in/WRGIS_data/
+PointSourceData/Abstractions/data_out/WRGIS_data/
+
+# ---- Geo ----
+GeoData/
+
+
+# ---- Forcing ----
+ForcingData/Rainfall/
+ForcingData/Temperature/
+ForcingData/HadUKRaw/
+
+
+# ---- Observations ----
+QObs/data_in/Flow_data/
+QObs/data_out/
+
+
+# ---- XObs ----
+XobsData/
+
+
+# Dev scripts
 Scripts/Dev*
+
+# --- Keep directory structure ---
+
+!GeoData/.gitkeep
+
+!ForcingData/.gitkeep
+!ForcingData/Rainfall/.gitkeep
+!ForcingData/Temperature/.gitkeep
+!ForcingData/HadUKRaw/.gitkeep
+
+!QObs/.gitkeep
+!QObs/data_in/.gitkeep
+!QObs/data_in/Flow_data/.gitkeep
+!QObs/data_out/.gitkeep
+
+!XobsData/.gitkeep
+
+!PointSourceData/Discharges/api_cache/.gitkeep
+!PointSourceData/Discharges/data_in/stw_flow_data/collated_data/.gitkeep
+!PointSourceData/Discharges/data_in/stw_flow_data/new_exports/.gitkeep
+!PointSourceData/Discharges/data_in/CattleInStreams/.gitkeep
+!PointSourceData/Discharges/data_out/.gitkeep
+
+!PointSourceData/Abstractions/data_in/returns_data/.gitkeep
+!PointSourceData/Abstractions/data_in/returns_details/.gitkeep
+!PointSourceData/Abstractions/data_in/WRGIS_data/.gitkeep
+!PointSourceData/Abstractions/data_out/WRGIS_data/.gitkeep
