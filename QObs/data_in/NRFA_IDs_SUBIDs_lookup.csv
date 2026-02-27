@@ -1,0 +1,777 @@
+STATION_NUMBER,RIVER,LOCATION,SUBID
+101002,Medina,Shide,2295
+101003,Lukely Brook,Carisbrooke Mill,2313
+101004,Eastern Yar,Burnt House,1749
+101005,Eastern Yar,Budbridge,2312
+21032,Glen,Kirknewton,4884
+22001,Coquet,Morwick,1181
+22003,Usway Burn,Shillmoor,771
+22006,Blyth,Hartford Bridge,865
+22007,Wansbeck,Mitford,4506
+22009,Coquet,Rothbury,1180
+23001,Tyne,Bywell,4508
+23002,Derwent,Eddys Bridge,4509
+23003,North Tyne,Reaverhill,4510
+23004,South Tyne,Haydon Bridge,759
+23006,South Tyne,Featherstone,835
+23007,Derwent,Rowlands Gill,914
+23008,Rede,Rede Bridge,796
+23009,South Tyne,Alston,4458
+23011,Kielder Burn,Kielder,607
+23016,Ouse Burn,Crag Hall,2107
+23017,Team,Team Valley,690
+23018,Ouse Burn,Woolsington,4514
+23022,North Tyne,Uglydub,4515
+24001,Wear,Sunderland Bridge,1245
+24003,Wear,Stanhope,4516
+24004,Bedburn Beck,Bedburn,1275
+24005,Browney,Burnhall,1329
+24008,Wear,Witton Park,1243
+24009,Wear,Chester le Street,1359
+24011,Wear,Burnhope Reservoir,4919
+25001,Tees,Darlington Broken Scar,2134
+25003,Trout Beck,Moor House,3414
+25004,Skerne,Darlington South Park,2121
+25005,Leven,Leven Bridge,1235
+25006,Greta,Rutherford Bridge,4468
+25008,Tees,Barnard Castle,3412
+25009,Tees,Low Moor,4517
+25011,Langdon Beck,Langdon,4463
+25012,Harwood Beck,Harwood,2238
+25018,Tees,Middleton in Teesdale,4465
+25019,Leven,Easby,4519
+25020,Skerne,Preston le Skerne,2073
+25021,Skerne,Bradbury,2049
+25023,Tees,Cow Green Reservoir,1823
+26003,Foston Beck,Foston Mill,862
+26005,Gypsey Race,Boynton,5077
+26006,Elmswell Beck,Little Driffield,860
+26008,Mires Beck,North Cave,4521
+26009,West Beck,Snakeholme Lock,4520
+26012,Foulness,Holme House Farm,4478
+26016,Gypsey Race,Kirby Grindalythe,4522
+27001,Nidd,Hunsingore Weir,4523
+27002,Wharfe,Wetherby Flint Mill,4524
+27003,Aire,Beal Weir,4525
+27005,Nidd,Gouthwaite Reservoir,1383
+27006,Don,Sheffield Hadfields,4886
+27007,Ure,Westwick Lock,4526
+27009,Ouse,Skelton,4527
+27021,Don,Doncaster,4877
+27023,Dearne,Barnsley Weir,2043
+27025,Rother,Woodhouse Mill,4529
+27026,Rother,Whittington,4530
+27028,Aire,Armley,1533
+27029,Calder,Elland,1936
+27030,Dearne,Adwick,2084
+27031,Colne,Colne Bridge,1983
+27032,Hebden Beck,Hebden,1877
+27034,Ure,Kilgram Bridge,4533
+27035,Aire,Kildwick Bridge,1534
+27038,Costa Beck,Gatehouses,4535
+27040,Doe Lea,Staveley,4474
+27041,Derwent,Buttercrambe,610
+27042,Dove,Kirkby Mills,207
+27043,Wharfe,Addingham,740
+27044,Blackfoss Beck,Sandhills Bridge,1283
+27047,Snaizeholme Beck,Low Houses,3345
+27048,Derwent,West Ayton,4482
+27049,Rye,Ness,1353
+27051,Crimple,Burn Bridge,4538
+27052,Whitting,Sheepbridge,1406
+27053,Nidd,Birstwith,1384
+27054,Hodge Beck,Cherry Farm,1991
+27055,Rye,Broadway Foot,4540
+27056,Pickering Beck,Ings Bridge,1987
+27057,Seven,Normanby,1378
+27058,Riccal,Crook House Farm,1356
+27059,Laver,Ripon Laver Weir,3534
+27061,Colne,Longroyd Bridge,1523
+27062,Nidd,Skip Bridge,1382
+27064,Went,Walden Stubbs,2125
+27065,Holme,Queens Mill,2079
+27066,Blackburn Brook,Ashlowes,1336
+27067,Sheaf,Highfield Road,1320
+27068,Ryburn,Ripponden,4878
+27069,Wiske,Kirby Wiske,3092
+27071,Swale,Crakehill,1525
+27072,Worth,Keighley,2063
+27073,Brompton Beck,Snainton Ings,1516
+27074,Spen Beck,Northorpe,2841
+27075,Bedale Beck,Leeming,2956
+27076,Bielby Beck,Thornton Lock,4546
+27077,Bradford Beck,Shipley,2060
+27079,Calder,Methley,3454
+27080,Aire,Oulton Lemonroyd,4531
+27081,Oulton Beck,Oulton Farrer Lane,1940
+27082,Cundall Beck,Bat Bridge,3238
+27083,Foss,Huntington,1289
+27084,Eastburn Beck,Crosshills,2116
+27085,Cod Beck,Dalton Bridge,3663
+27086,Skell,Ripon Alma Weir,1439
+27087,Derwent,Low Marishes,1516
+27088,Calder,Mytholmroyd,4549
+27089,Wharfe,Tadcaster,822
+27090,Swale,Catterick Bridge,4550
+27091,Crimple,Blackstones,1342
+27092,Esk,Briggswath,1350
+27099,Derwent,Malton A64 Road Bridge,4551
+28001,Derwent,Yorkshire Bridge,4913
+28002,Blithe,Hamstall Ridware,1670
+28003,Tame,Water Orton,1634
+28007,Trent,Shardlow,1968
+28008,Dove,Rocester Weir,2876
+28009,Trent,Colwick,4473
+28012,Trent,Yoxall,1614
+28014,Sow,Milford,3463
+28015,Idle,Mattersey,2445
+28018,Dove,Marston on Dove,1948
+28019,Trent,Drakelow Park,4556
+28022,Trent,North Muskham,2363
+28023,Wye,Ashford,2377
+28024,Wreake,Syston Mill,2531
+28026,Anker,Polesworth,4879
+28027,Erewash,Sandiacre,2866
+28031,Manifold,Ilam,2715
+28032,Meden,Church Warsop,4587
+28033,Dove,Hollinsclough,4560
+28035,Leen,Triumph Road Nottingham,1797
+28036,Poulter,Twyford Bridge,4916
+28039,Rea,Calthorpe Park,4561
+28040,Trent,Stoke-On-Trent,2661
+28041,Hamps,Waterhouses,2336
+28043,Derwent,Chatsworth,2828
+28044,Poulter,Cuckney,5141
+28046,Dove,Izaak Walton,2561
+28047,Oldcotes Dyke,Blyth,2806
+28048,Amber,Wingfield Park,1903
+28049,Ryton,Worksop,4475
+28050,Torne,Auckley,4566
+28052,Sow,Great Bridgford,3466
+28053,Penk,Penkridge,4880
+28055,Ecclesbourne,Duffield,2878
+28056,Rothley Brook,Rothley,2399
+28058,Henmore Brook,Ashbourne,2877
+28060,Dover Beck,Lowdham,1806
+28061,Churnet,Basford Bridge,4570
+28066,Cole,Coleshill,4571
+28067,Derwent,Church Wilne,1796
+28072,Greet,Southwell,1809
+28074,Soar,Kegworth,4573
+28079,Meece Brook,Shallowford,1570
+28080,Tame,Lea Marston Lakes,4574
+28081,Tame,Bescot,4575
+28082,Soar,Littlethorpe,2505
+28083,Trent,Darlaston,4576
+28085,Derwent,St Mary's Bridge,4577
+28086,Sence,South Wigston,4578
+28091,Ryton,Blyth,2446
+28093,Soar,Pillings Lock,3464
+28095,Tame,Hopwas Bridge,4580
+28109,Sow,Walkmill,4582
+28110,Oldacre Brook,Brocton,4583
+28115,Maun,Mansfield the Dykes,1553
+28116,Maun,Whitewater Bridge,4586
+28117,Derwent,Whatstandwell,1909
+28118,Meden,Perlethorpe,4959
+29001,Waithe Beck,Brigsley,4588
+29002,Great Eau,Claythorpe Mill,4589
+29003,Lud,Louth,4590
+29005,Rase,Bishopbridge,3657
+29009,Ancholme,Toft Newton,4481
+30001,Witham,Claypole Mill,4591
+30002,Barlings Eau,Langworth Bridge,2067
+30003,Bain,Fulsby Lock,2676
+30004,Lymn,Partney Mill,612
+30005,Witham,Saltersford Total,4593
+30006,Slea,Leasingham Mill,2960
+30011,Bain,Goulceby Bridge,4594
+30012,Stainfield Beck,Cream Poke Farm,4595
+30013,Heighington Beck,Heighington,2637
+30014,Pointon Lode,Pointon,1932
+30015,Cringle Brook,Stoke Rochford,3602
+30017,Witham,Colsterworth,203
+30033,Brant,Brant Broughton,4597
+31002,Glen,Kates Br & King St Br,4598
+31004,Welland,Tallington Total,1787
+31006,Gwash,Belmesthorpe,1788
+31007,Welland,Barrowden,1785
+31008,East Glen,Manthorpe,4602
+31009,West Glen,Shillingthorpe,1834
+31010,Chater,Fosters Bridge,4480
+31013,East Glen,Irnham,1856
+31016,North Brook,Empingham,5106
+31021,Welland,Ashley,4603
+31022,Jordan,Market Harborough,2621
+31023,West Glen,Easton Wood,4604
+31024,Holywell Brook,Holywell,1834
+31025,Gwash South Arm,Manton,3507
+31026,Egleton Brook,Egleton,4606
+32002,Willow Brook,Fotheringhay,2022
+32003,Harpers Brook,Old Mill Bridge,166
+32004,Ise Brook,Harrowden,4608
+32006,Nene/Kislingbury,Upton Total,2613
+32007,Nene/Brampton,St Andrews Total,2656
+32008,Nene/Kislingbury,Dodford,2654
+32019,Slade Brook,Kettering,3402
+32031,Wootton Brook,Wootton Park,2668
+33002,Bedford Ouse,Bedford,1956
+33006,Wissey,Northwold Total,1726
+33007,Nar,Marham,2450
+33011,Little Ouse,County Bridge Euston,4638
+33012,Kym,Meagre Farm,1883
+33013,Sapiston,Rectory Bridge,1476
+33014,Lark,Temple,4623
+33015,Ouzel,Willen,4635
+33018,Tove,Cappenham Bridge,4625
+33019,Thet,Melford Bridge,4494
+33020,Alconbury Brook,Brampton,4626
+33021,Rhee,Burnt Mill,183
+33022,Ivel,Blunham,2409
+33023,Lea Brook,Beck Bridge,1490
+33024,Cam,Dernford,2583
+33026,Bedford Ouse,Offord,1955
+33027,Rhee,Wimpole,4628
+33028,Flit,Shefford,3482
+33029,Stringside,Whitebridge,1606
+33030,Clipstone Brook,Clipstone,2585
+33031,Broughton Brook,Broughton,1596
+33032,Heacham,Heacham,4629
+33033,Hiz,Arlesey,1902
+33035,Ely Ouse,Denver Complex,4069
+33037,Bedford Ouse,Newport Pagnell Total,2781
+33040,Rhee,Ashwell,4631
+33044,Thet,Bridgham,1745
+33045,Wittle,Quidenham,2366
+33046,Thet,Redbridge,4632
+33050,Snail,Fordham,2755
+33051,Cam,Chesterford,4489
+33052,Swaffham Lode,Swaffham Bulbeck,2859
+33053,Granta,Stapleford,4634
+33054,Babingley,Castle Rising,4633
+33055,Granta,Babraham,4640
+33056,Quy Water,Lode,2858
+33057,Ouzel,Leighton Buzzard,1894
+33058,Ouzel,Bletchley,1600
+33061,Shep,Fowlmere One,4637
+33062,Guilden Brook,Fowlmere Two,4636
+33063,Little Ouse,Knettishall,1479
+33064,Whaddon Brook,Whaddon,2819
+33065,Hiz,Hitchin,1900
+33066,Granta,Linton,3484
+33070,Lark,Fornham St Martin,4642
+34001,Yare,Colney,2972
+34002,Tas,Shotesham,4644
+34003,Bure,Ingworth,4645
+34004,Wensum,Costessey Mill,296
+34005,Tud,Costessey Park,3834
+34006,Waveney,Needham Mill,2783
+34007,Dove,Oakley Park,2454
+34008,Ant,Honing Lock,4021
+34010,Waveney,Billingford Bridge,2497
+34011,Wensum,Fakenham,614
+34012,Burn,Burnham Overy,110
+34014,Wensum,Swanton Morley Total,4647
+34018,Stiffkey,Warham,2478
+34019,Bure,Horstead Mill,1485
+35002,Deben,Naunton Hall,1715
+35003,Alde,Farnham,293
+35004,Ore,Beversham Bridge,2149
+35008,Gipping,Stowmarket,4650
+35010,Gipping,Bramford,1692
+35013,Blyth,Holton,4497
+36002,Glem,Glemsford,3478
+36003,Box,Polstead,1676
+36004,Chad Brook,Long Melford,3480
+36005,Brett,Hadleigh,2259
+36006,Stour,Langham,253
+36007,Belchamp Brook,Bardfield Bridge,1716
+36008,Stour,Westmill,4652
+36009,Brett,Cockfield,4653
+36010,Bumpstead Brook,Broad Green,1675
+36011,Stour Brook,Sturmer,2910
+36012,Stour,Kedington,3479
+36013,Brett,Higham,4651
+36015,Stour,Lamarsh,2260
+37001,Roding,Redbridge,2232
+37002,Chelmer,Rushes Lock,4655
+37003,Ter,Crabbs Bridge,136
+37005,Colne,Lexden,1827
+37006,Can,Beach's Mill,1944
+37007,Wid,Writtle,1947
+37008,Chelmer,Springfield,1647
+37009,Brain,Guithavon Valley,140
+37010,Blackwater,Appleford Bridge,1653
+37011,Chelmer,Churchend,4658
+37012,Colne,Poolstreet,4659
+37013,Sandon Brook,Sandon Bridge,4897
+37014,Roding,High Ongar,215
+37015,Cripsey Brook,Chipping Ongar,1602
+37016,Pant,Copford Hall,1434
+37017,Blackwater,Stisted,4660
+37018,Ingrebourne,Gaynes Park,2892
+37019,Beam,Bretons Farm,5242
+37020,Chelmer,Felsted,4662
+37022,Holland Brook,Thorpe le Soken,1828
+37023,Roding,Loughton,2232
+37024,Colne,Earls Colne,4491
+37031,Crouch,Wickford,4665
+37033,Eastwood Brook,Eastwood,2329
+37034,Mar Dyke,Stifford,2440
+38001,Lee,Feildes Weir,4667
+38002,Ash,Mardock,2220
+38003,Mimram,Panshanger Park,4670
+38004,Rib,Wadesmill,2203
+38007,Canons Brook,Elizabeth Way,1915
+38011,Mimram,Fulling Mill,2217
+38012,Stevenage Brook,Bragbury Park,2321
+38013,Upper Lee,Luton Hoo,5184
+38014,Salmon Brook,Edmonton,2761
+38016,Stansted Springs,Mountfitchet,2202
+38017,Mimram,Whitwell,2361
+38018,Upper Lee,Water Hall,2320
+38020,Cobbins Brook,Sewardstone Road,2763
+38021,Turkey Brook,Albany Park,5248
+38022,Pymmes Brook,Edmonton Silver Street,2759
+38024,Small River Lee,Ordnance Road,1913
+38026,Pincey Brook,Sheering Hall,2204
+38027,Stort,Glen Faba,2219
+38028,Stansted Brook,Gypsy Lane,2362
+38029,Quin,Griggs Bridge,2315
+38030,Beane,Hartham,1561
+38031,Lee,Rye Bridge,1916
+38032,Lee,Lea Bridge,4672
+39001,Thames,Kingston,1623
+39002,Thames,Days Weir,4688
+39003,Wandle,South Wimbledon,4674
+39004,Wandle,Beddington Park,3541
+39005,Beverley Brook,Wimbledon Common,4675
+39006,Windrush,Newbridge,2235
+39007,Blackwater,Swallowfield,2165
+39008,Thames,Eynsham,1254
+39010,Colne,Denham,2517
+39011,Wey,Tilford,4677
+39012,Hogsmill,Kingston upon Thames,1804
+39013,Colne,Berrygrove,4678
+39014,Ver,Hansteads,3870
+39015,Whitewater,Lodge Farm,4679
+39016,Kennet,Theale,2773
+39017,Ray,Grendon Underwood,3632
+39019,Lambourn,Shaw,4685
+39020,Coln,Bibury,4682
+39021,Cherwell,Enslow Mill,2765
+39022,Loddon,Sheepbridge,2166
+39023,Wye,Hedsor,3978
+39025,Enborne,Brimpton,2167
+39026,Cherwell,Banbury,4683
+39027,Pang,Pangbourne,4715
+39028,Dun,Hungerford,1799
+39029,Tilling Bourne,Shalford,5243
+39030,Gade,Croxley Green,3569
+39031,Lambourn,Welford,1621
+39033,Winterbourne Stream,Bagnor,2680
+39034,Evenlode,Cassington Mill,3704
+39035,Churn,Cerney Wick,2720
+39036,Law Brook,Albury,4686
+39037,Kennet,Marlborough,2776
+39040,Thames,West Mill Cricklade,2871
+39042,Leach,Priory Mill Lechlade,3161
+39043,Kennet,Knighton,2777
+39044,Hart,Bramshill House,1627
+39046,Thames,Sutton Courtenay,1255
+39049,Silk Stream,Colindeep Lane,2468
+39052,The Cut,Binfield,4689
+39053,Mole,Horley,4485
+39054,Mole,Gatwick Airport,4690
+39056,Ravensbourne,Catford Hill,4691
+39058,Pool River,Winsford Road,1495
+39061,Letcombe Brook,Letcombe Bassett,4692
+39068,Mole,Castle Mill,4694
+39069,Mole,Kinnersley Manor,4695
+39071,Thames,Ewen,3280
+39072,Thames,Royal Windsor Park,4697
+39073,Churn,Cirencester,4698
+39074,Ampney Brook,Sheepen Bridge,4705
+39076,Windrush,Worsham,4699
+39077,Og,Marlborough Poulton Fm,2382
+39078,Wey (North),Farnham,2138
+39079,Wey,Weybridge,1578
+39081,Ock,Abingdon,2813
+39084,Brent,Brent Cross,4701
+39086,Gatwick Stream,Gatwick Link,2340
+39087,Ray,Water Eaton,2188
+39088,Chess,Rickmansworth,3670
+39089,Gade,Bury Mill,3706
+39090,Cole,Inglesham,3236
+39092,Dollis Brook,Hendon Lane Bridge,2469
+39093,Brent,Monks Park,4702
+39094,Crane,Marsh Farm,2472
+39095,Quaggy,Manor House Gardens,1499
+39096,Wealdstone Brook,Wembley,1665
+39099,Ampney Brook,Ampney St Peter,1250
+39100,Swill Brook,Oaksey,3689
+39101,Aldbourne,Ramsbury,2384
+39103,Kennet,Newbury,2778
+39104,Mole,Esher,4707
+39105,Thame,Wheatley,1220
+39108,Churn,Perrott's Brook,4710
+39109,Coln,Fossebridge,5181
+39110,Coln,Fairford,3343
+39111,Thames,Staines,4713
+39113,Manor Farm Brook,Letcombe Regis,4714
+39114,Pang,Frilsham,1500
+39115,Pang,Bucklebury,4716
+39116,Sulham Brook,Sulham,1498
+39119,Wey,Kings Pond (Alton),3496
+39120,Caker Stream,Alton,3405
+39121,Thames,Walton,4718
+39122,Cranleigh Waters,Bramley,1734
+39123,Blackwater,Farnborough,2794
+39125,Ver,Redbourn,4720
+39126,Red,Redbourn,4721
+39127,Misbourne,Little Missenden,1686
+39128,Bourne (South),Addlestone,2602
+39130,Thames,Reading,1253
+39131,Brent,Costons Lane Greenford,4057
+39134,Ravensbourne East,Bromley South,4724
+39137,Yeading West,Gutteridge Wood,4483
+39138,Loddon,Twyford,2775
+39140,Ray,Islip,1683
+39141,Wey,Guildford,4726
+39142,Windrush,Bourton on the Water,2154
+39143,Dikler,Bourton on the Water,2153
+39144,Sor,Bodicote,2404
+39145,Yeading Brook East,Western Avenue A40,4728
+39146,Mill Brook,Blewbury,4729
+39147,Wendover Springs,Wendover,4730
+40003,Medway,Teston / East Farleigh,3489
+40004,Rother,Udiam,4732
+40005,Beult,Stilebridge,1791
+40006,Bourne,Hadlow,277
+40007,Medway,Chafford / Colliersland Bridge,2512
+40008,Great Stour,Wye,1923
+40009,Teise,Stonebridge,3437
+40010,Eden,Penshurst / Vexour Bridge,5204
+40011,Great Stour,Horton,1923
+40012,Darent,Hawley,2024
+40013,Darent,Otford,2023
+40015,White Drain,Fairbrook Farm,2919
+40016,Cray,Crayford,2442
+40017,Dudwell,Burwash,181
+40018,Darent,Lullingstone,4738
+40020,Eridge Stream,Hendal Bridge,2576
+40021,Hexden Channel,Hopemill Bridge Sandhurst,2546
+40022,Great Stour,Chart Leacon,2545
+40023,East Stour,South Willesborough,2543
+40024,Bartley Mill St,Bartley Mill,3435
+40025,Brede,Brede Pumping Station,4742
+40027,Sarre Penn,Calcott,4743
+40029,Len,Lenside,5229
+40033,Dour,Crabble Mill,4744
+41001,Nunningham Stream,Tilley Bridge,3444
+41002,Ash Bourne,Hammer Wood Bridge,1724
+41003,Cuckmere,Sherman Bridge,2375
+41005,Ouse,Gold Bridge,2693
+41006,Uck,Isfield,2415
+41009,Rother,Hardham,4893
+41011,Rother,Iping Mill,4751
+41012,Adur E Branch,Sakeham,4752
+41013,Huggletts Stream,Henley Bridge,4486
+41014,Arun,Pallingham,2418
+41015,Ems,Westbourne,2729
+41016,Cuckmere,Cowbeech,237
+41019,Arun,Alfoldean,4756
+41020,Bevern Stream,Clappers Bridge,3442
+41021,Clayhill Stream,Old Ship,2136
+41022,Lod,Halfway Bridge,5270
+41024,Shell Brook,Shell Brook,241
+41025,Loxwood Stream,Drungewick,2420
+41026,Cockhaise Brook,Holywell,1589
+41027,Rother,Princes Marsh,2170
+41028,Chess Stream,Chess Bridge,4759
+41029,Bull,Lealands,235
+41033,Costers Brook,Cocking,4761
+41035,North,Brookhurst,2457
+42001,Wallington,North Fareham,4762
+42003,Lymington,Brockenhurst,213
+42004,Test,Broadlands,2293
+42005,Wallop Brook,Broughton,2835
+42006,Meon,Mislingford,2273
+42007,Alre,Drove Lane Alresford,2832
+42008,Cheriton Stream,Sewards Bridge,1768
+42009,Candover Stream,Borough Bridge,2833
+42010,Itchen,Highbridge & Allbrook Total,286
+42011,Hamble,Frogmill,1723
+42012,Anton,Fullerton,4769
+42014,Blackwater,Ower,225
+42016,Itchen,Easton,4472
+42017,Hermitage Stream,Havant,2485
+42018,Monks Brook,Stoneham Lane,2481
+42019,Tanners Brook,Millbrook,2272
+42023,Itchen,Riverside Park,NA
+42024,Test,Chilbolton Total,1668
+42026,Wallop Brook,Bossington,4765
+42027,Dever,Bransbury,1669
+43003,Avon,East Mills  Total,1927
+43004,Bourne,Laverstock,3021
+43005,Avon,Amesbury,4773
+43006,Nadder,Wilton,1778
+43007,Stour,Throop,2700
+43008,Wylye,South Newton,4347
+43009,Stour,Hammoon,4775
+43010,Allen,Loverley Farm,396
+43012,Wylye,Norton Bavant,4776
+43013,Mude,Somerford,2699
+43014,East Avon,Upavon,3018
+43017,West Avon,Upavon,3018
+43018,Allen,Walford Mill,2731
+43019,Shreen Water,Colesbrook,201
+43021,Avon,Knapp Mill,4772
+43022,Moors River,Hurn Court,2701
+43024,Wylye,Stockton Park,4460
+43025,Dockens Water,Moyles Court,3519
+44001,Frome,East Stoke Total,3191
+44002,Piddle,Baggs Mill,4059
+44004,Frome,Dorchester Total,3191
+44006,Sydling Water,Sydling St Nicholas,4778
+44008,South Winterbourne,Winterbourne Steepleton,4779
+44009,Wey,Broadwey,622
+44011,Asker,East Bridge Bridport,541
+45001,Exe,Thorverton,1741
+45002,Exe,Stoodleigh,4447
+45003,Culm,Woodmill,3175
+45004,Axe,Whitford,2594
+45005,Otter,Dotton,4065
+45008,Otter,Fenny Bridges,4781
+45009,Exe,Pixton,4782
+45011,Barle,Brushford,1978
+45012,Creedy,Cowley,3125
+45013,Tale,Fairmile,3714
+46002,Teign,Preston,3921
+46003,Dart,Austins Bridge,4286
+46005,East Dart,Bellever,3215
+46006,Erme,Ermington,589
+46007,West Dart,Dunnabridge,4129
+46008,Avon,Loddiswell,1654
+47001,Tamar,Gunnislake,1814
+47004,Lynher,Pillaton Mill,3916
+47005,Ottery,Werrington Park,3594
+47006,Lyd,Lifton Park,2396
+47007,Yealm,Puslinch,4083
+47008,Thrushel,Tinhay,4498
+47009,Tiddy,Tideford,3031
+47010,Tamar,Crowford Bridge,4341
+47011,Plym,Carn Wood,4785
+47013,Withey Brook,Bastreet,3917
+47014,Walkham,Horrabridge,175
+47015,Tavy,Ludbrook,1980
+47018,Thrushel,Hayne Bridge,565
+47019,Tamar,Polson Bridge,4786
+47020,Inny,Bealsmill,1816
+48001,Fowey,Trekeivesteps,493
+48003,Fal,Tregony,2491
+48004,Warleggan,Trengoffe,491
+48005,Kenwyn,Truro,576
+48006,Cober,Helston County Bridge,4788
+48007,Kennal,Ponsanooth,595
+48009,St Neot,Craigshill Wood,630
+48010,Seaton,Trebrownbridge,4351
+48011,Fowey,Restormel,4068
+49001,Camel,Denby,4229
+49002,Hayle,St Erth,4272
+49003,De Lank,De Lank,3675
+49004,Gannel,Gwills,4791
+50001,Taw,Umberleigh,4440
+50002,Torridge,Torrington,3383
+50003,Taw,Sticklepath,4794
+50005,West Okement,Vellake,4795
+50006,Mole,Woodleigh,4796
+50007,Taw,Taw Bridge,3373
+50008,Lew,Gribbleford Bridge,2718
+50009,Lew,Norley Bridge,270
+50010,Torridge,Rockhay Bridge,4252
+50011,Okement,Jacobstowe,2995
+50012,Yeo,Veraby,582
+50014,Yeo,Collard Bridge,4444
+51001,Doniford Stream,Swill Bridge,3247
+51002,Horner Water,West Luccombe,3245
+51003,Washford,Beggearn Huish,4799
+52001,Axe,Wookey,4800
+52003,Halsewater,Halsewater,3537
+52004,Isle,Ashford Mill,4801
+52005,Tone,Bishops Hull,3377
+52006,Yeo,Pen Mill,3954
+52007,Parrett,Chiselborough,4291
+52009,Sheppey,Fenny Castle,3087
+52010,Brue,Lovington,4802
+52011,Cary,Somerton,1821
+52014,Tone,Greenham,4804
+52015,Land Yeo,Wraxall Bridge,351
+52016,Currypool Stream,Currypool Farm,2526
+52017,Congresbury Yeo,Iwood,3986
+52025,Hillfarrance Brook,Milverton,4106
+52026,Alham,Higher Alham,4806
+53002,Semington Brook,Semington,3300
+53004,Chew,Compton Dando,3577
+53005,Midford Brook,Midford,4811
+53006,Frome (Bristol),Frenchay,4808
+53007,Frome (Somerset),Tellisford,3681
+53008,Avon,Great Somerford,4810
+53009,Wellow Brook,Wellow,3202
+53013,Marden,Stanley,4462
+53017,Boyd,Bitton,3168
+53018,Avon,Bathford,4812
+53019,Woodbridge Brook,Crabb Mill,4132
+53020,Gauze Brook,Rodbourne,423
+53022,Avon,Bath ultrasonic,4813
+53023,Sherston Avon,Fosseway,3064
+53024,Tetbury Avon,Brokenborough,4133
+53025,Mells,Vallis,3992
+53026,Frome (Bristol),Frampton Cotterell,4817
+53028,By Brook,Middlehill,3807
+53029,Biss,Trowbridge,3641
+54001,Severn,Bewdley,3385
+54002,Avon,Evesham,3226
+54004,Sowe,Stoneleigh,3517
+54005,Severn,Montford,4820
+54006,Stour (Worcs),Kidderminster Callows Lane,4206
+54007,Arrow,Broom,2388
+54008,Teme,Tenbury,4822
+54010,Stour (Warks),Alscot Park,4469
+54011,Salwarpe,Harford Hill,3104
+54015,Bow Brook,Besford Bridge,2901
+54016,Roden,Rodington,1837
+54017,Leadon,Wedderburn Bridge,3558
+54018,Rea Brook,Hookagate,3844
+54019,Avon,Stareton,4095
+54020,Perry,Yeaton,3013
+54023,Badsey Brook,Offenham,4014
+54024,Worfe,Burcote,3138
+54027,Frome,Ebley Mill,336
+54029,Teme,Knightsford Bridge,3286
+54032,Severn,Saxons Lode,2493
+54034,Dowles Brook,Oak Cottage,361
+54036,Isbourne,Hinton on the Green,447
+54038,Tanat,Llanyblodwel,3026
+54040,Meese,Tibberton,1742
+54041,Tern,Eaton upon Tern,5101
+54044,Tern,Ternhill,2925
+54046,Worfe,Cosford,4829
+54048,Dene,Wellesbourne,5138
+54049,Leam,Princes Drive Weir,3673
+54050,Leam,Eathorpe,4830
+54052,Bailey Brook,Ternhill,2925
+54057,Severn,Haw Bridge,4831
+54060,Potford Brook,Sandyford Bridge,1743
+54063,Stour (Worcs),Prestwood Hospital,3758
+54088,Little Avon,Berkeley Kennels,3500
+54095,Severn,Buildwas,4835
+54096,Hadley Brook,Wards Bridge,3105
+54098,Cam,Cambridge,292
+54099,Coley Brook,Coley Mill,155
+54100,Lonco Brook,Whitleyford Bridge,2924
+54114,Avon,Warwick,4837
+55002,Wye,Belmont,3965
+55003,Lugg,Lugwardine,3958
+55013,Arrow,Titley Mill,4503
+55014,Lugg,Byton,4838
+55018,Frome,Yarkhill,3957
+55020,Pinsley Brook,Cholstrey Mill,2928
+55021,Lugg,Butts Bridge,1874
+55023,Wye,Redbrook,3963
+55028,Frome,Bishops Frome,4841
+55029,Monnow,Grosmont,4842
+55031,Yazor Brook,Three Elms,402
+55036,Garren,Marstow Mill,4184
+67005,Ceiriog,Brynkinalt Weir,4288
+67027,Dee,Ironbridge,3358
+67033,Dee,Chester Suspension Bridge,4505
+68001,Weaver,Ashbrook,4437
+68003,Dane,Rudheath,4134
+68004,Wistaston Brook,Marshfield Bridge,4240
+68005,Weaver,Audlem,4843
+68007,Wincham Brook,Lostock Gralam,3077
+68015,Gowy,Huxley,4345
+68020,Gowy,Bridge Trafford,4316
+68044,Dane,Hug Bridge,4845
+69002,Irwell,Adelphi Weir,2953
+69005,Glaze Brook,Little Woolden Hall,2949
+69007,Mersey,Ashton Weir,3998
+69008,Dean,Stanneylands,3735
+69012,Bollin,Wilmslow,443
+69013,Sinderland Brook,Partington,3609
+69015,Etherow,Compstall,5043
+69017,Goyt,Marple Bridge,3546
+69020,Medlock,London Road,2943
+69022,Irwell,Irwell Vale,4847
+69023,Roch,Blackford Bridge,3909
+69024,Croal,Farnworth Weir,3905
+69027,Tame,Portwood,2939
+69030,Sankey Brook,Causey Bridges,4848
+69032,Alt,Kirkby,4849
+69041,Tame,Broomstairs,4850
+69043,Irk,Collyhurst Weir,2941
+69044,Irwell,Bury Ground,4153
+69045,Bollin,Bollington Mill Total,3828
+70002,Douglas,Wanes Blades Bridge,4257
+70003,Douglas,Wigan,3938
+70004,Yarrow,Croston Mill,3047
+70005,Lostock,Littlewood Bridge,3051
+71001,Ribble,Samlesbury,554
+71004,Calder,Whalley Weir,4309
+71008,Hodder,Hodder Place,522
+71009,Ribble,New Jumbles Rock,4854
+71010,Pendle Water,Barden Lane,4855
+71011,Ribble,Arnford,4856
+71013,Darwen,Ewood,4305
+71014,Darwen,Blue Bridge,4329
+71015,Dunsop,Footholme Flume,4858
+72002,Wyre,St Michaels,4859
+72004,Lune,Caton,3259
+72005,Lune,Killington,3724
+72007,Brock,upstream of A6,468
+72008,Wyre,Garstang,3856
+72009,Wenning,Wennington,3260
+72011,Rawthey,Brigflatts,3723
+72014,Conder,Galgate,2945
+72015,Lune,Lunes Bridge,4863
+72016,Wyre,Scorton Weir,473
+73002,Crake,Low Nibthwaite,537
+73005,Kent,Sedgwick,4381
+73006,Cunsey Beck,Eel House Bridge,5119
+73008,Bela,Beetham,4867
+73009,Sprint,Sprint Mill,3316
+73010,Leven,Newby Bridge,4883
+73011,Mint,Mint Bridge,4362
+73013,Rothay,Miller Bridge House,632
+73014,Brathay,Jeffy Knotts,4218
+73015,Keer,High Keer Weir,4868
+74001,Duddon,Duddon Hall,3108
+74002,Irt,Galesyke,454
+74003,Ehen,Bleach Green,506
+74005,Ehen,Braystones,4015
+74006,Calder,Calder Hall,4384
+74007,Esk,Cropple How,3110
+74008,Duddon,Ulpha,4871
+75001,St Johns Beck,Thirlmere Reservoir,3140
+75002,Derwent,Camerton,3939
+75003,Derwent,Ouse Bridge,3548
+75004,Cocker,Southwaite Bridge,3101
+75005,Derwent,Portinscale,4874
+75007,Glenderamackin,Threlkeld,342
+75016,Cocker,Scalehill,4875
+75017,Ellen,Bullgill,4343
+76001,Haweswater Beck,Burnbanks,939
+76003,Eamont,Udford,1062
+76004,Lowther,Eamont Bridge,66
+76005,Eden,Temple Sowerby,4610
+76007,Eden,Sheepmount,4615
+76008,Irthing,Greenholme,658
+76010,Petteril,Harraby Green,4452
+76011,Coal Burn,Coalburn,4612
+76014,Eden,Kirkby Stephen,716
+76015,Eamont,Pooley Bridge,1078
+76017,Eden,Great Corby,2
+76020,Petteril,Newbiggin Bridge,698
+77002,Esk,Canonbie,4617
+77003,Liddel Water,Rowanburnfoot,801

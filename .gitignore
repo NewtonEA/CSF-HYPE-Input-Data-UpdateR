@@ -1,0 +1,32 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+#non project folders
+misc/
+Pesticides/
+status_tracking/
+# Large data
+*.log
+*.zip
+*.7z
+*.nc
+*.rds
+*.accdb
+PointSourceData/Discharges/api_cache/*
+PointSourceData/Discharges/data_in/stw_flow_data/collated_data/*
+PointSourceData/Discharges/data_in/stw_flow_data/new_exports/*
+PointSourceData/Discharges/data_in/CattleInStreams/*
+PointSourceData/Discharges/data_out/*
+PointSourceData/Abstractions/data_in/returns_data/*
+PointSourceData/Abstractions/data_in/returns_details/*
+PointSourceData/Abstractions/data_in/WRGIS_data/*
+PointSourceData/Abstractions/data_out/WRGIS_data/*
+GeoData/*
+ForcingData/Rainfall/*
+ForcingData/Temperature/*
+ForcingData/HadUKRaw/*
+QObs/data_in/Flow_data/*
+QObs/data_out/*
+XobsData/*
+Scripts/Dev*
