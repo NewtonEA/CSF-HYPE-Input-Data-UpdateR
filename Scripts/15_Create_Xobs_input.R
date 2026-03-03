@@ -75,18 +75,22 @@ xob_data_out <- xob_data %>%
   pivot_wider(names_from = MEAS_DETERMINAND_CODE, values_from = MEAS_RESULT) %>% 
   # apply HYPE substance mapping rules + preferred/fallback logic
   mutate(
-    reSS = `0135`,
-    reT1 = `2348`,
-    reT2 = `0076`,
-    reSP = `0180`,
+    reSS = `0135`, # already in mg/L as required
+    reT1 = `2348` / 100, # convert from cfu/100ml to cfu/1ml
+    reT2 = `0076`, # already degrees C as required
     
-    # TP: prefer 0348 else 0192
-    reTP = coalesce(`0348`, `0192`),
+    # convert from mg/L to ug/L
+    reSP = `0180` * 1000,
     
-    # IN: prefer 0111+0116 else 0111+0117+0118 if 0116 missing
-    reIN = if_else(!is.na(`0116`),
-                 `0111` + `0116`,
-                 `0111` + `0117` + `0118`)
+    # TP: prefer 0348 else 0192, then convert to ug/L
+    reTP = coalesce(`0348`, `0192`) * 1000,
+    
+    # IN calculation then convert to ug/L
+    reIN = if_else(
+      !is.na(`0116`),
+      (`0111` + `0116`) * 1000,
+      (`0111` + `0117` + `0118`) * 1000
+    )
   ) %>%
   select(date, SUBID, reIN, reSP, reTP, reSS, reT1, reT2) %>%
   arrange(SUBID) %>% 
