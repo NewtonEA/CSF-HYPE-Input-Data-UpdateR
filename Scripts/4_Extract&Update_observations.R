@@ -1,13 +1,14 @@
 # ============================================================
-# Effluent incremental updater - transactional update workflow
+# Monitoring data incremental updater - transactional update workflow
 # 
 # Skips fetching if baseline already covers model timeframe
 # where timeframe is determined by latest forcing data availability
 # 
-# Fetches effluent monitoring data for sites attached to Discharge consents
+# Fetches  monitoring data for sites attached to: 
+# - Discharge consents
+# - Xobs sites list
 # via the Water Quality Explorer API
 #
-# Written and tested by Tom Newton, Jan 2026
 # ============================================================
 
 # ============================================================
@@ -24,19 +25,20 @@ pacman::p_load(
   future.apply,
   furrr,
   glue,
-  data.table
+  data.table,
+  readr
 )
 
-# Ensure clean future state
-plan(sequential)
 options(future.globals.maxSize = 5 * 1024^3)
+plan(sequential)
 
 # ============================================================
 # Paths & constants
 # ============================================================
 
-cache_dir       <- here("PointSourceData", "Discharges", "api_cache")
-update_temp_dir <- file.path(cache_dir, "update_temp")
+cache_dir         <- here("PointSourceData", "Discharges", "api_cache")
+eff_update_tmp    <- file.path(cache_dir, "update_temp_effluent")
+xobs_update_tmp   <- file.path(cache_dir, "update_temp_xobs")
 
 per_call_limit        <- 250
 sleep_between_calls   <- 0.05
@@ -58,8 +60,12 @@ api_version <- "1"
 required_inputs <- c(
   here("PointSourceData", "Discharges", "data_out", "effluent_monitoring_sites.csv"),
   list.files(cache_dir, pattern = "^HYPE_EFFLUENT_MONITORING_DATA_.*\\.rds$", full.names = TRUE),
+  list.files(cache_dir, pattern = "^HYPE_XOBS_DATA_.*\\.rds$", full.names = TRUE),
+  file.path(cache_dir, "invalid_eff_sites.csv"),
+  file.path(cache_dir, "closed_sampling_points.csv"),
   here("PointSourceData", "Discharges", "data_in", "WISKI_to_WIMS_LUT.txt"),
-  here("ForcingData", "_forcing_metadata.rds")
+  here("ForcingData", "_forcing_metadata.rds"),
+  here("XobsData", "Xobs_sites_SUBID_lut.csv")
 )
 
 missing_inputs <- required_inputs[!file.exists(required_inputs)]
@@ -73,19 +79,23 @@ message("✅ All required input files present.")
 flush.console()
 
 # ============================================================
-# Helper functions (must be top-level for future_lapply)
+# Helper functions (top-level for futures)
 # ============================================================
 
 safe_api_GET <- function(url, query = list(), max_attempts = 6, base_wait = 0.5) {
   for (attempt in seq_len(max_attempts)) {
     res <- tryCatch(
-      GET(url, query = query,
-          add_headers(Accept = api_accept_header, `API-Version` = api_version)),
+      GET(
+        url,
+        query = query,
+        add_headers(Accept = api_accept_header, `API-Version` = api_version)
+      ),
       error = function(e) NULL
     )
     if (!is.null(res)) {
       status <- status_code(res)
       if (status >= 200 && status < 300) return(res)
+      # do not retry non-rate-limit client errors
       if (!(status == 429 || status >= 500)) return(res)
     }
     Sys.sleep(base_wait * 2^(attempt - 1) * runif(1, 0.5, 1.5))
@@ -97,45 +107,76 @@ safe_site_filename <- function(site) {
   paste0("site_", gsub("[^A-Za-z0-9_\\-]", "_", site), ".rds")
 }
 
+read_optional_csv1col <- function(path) {
+  if (!file.exists(path)) return(tibble(notation = character()))
+  # accept either 1-col CSV or normal headered
+  df <- suppressWarnings(read_csv(path, show_col_types = FALSE))
+  if (ncol(df) == 1) df <- df %>% rename(notation = 1)
+  df %>% mutate(notation = as.character(notation)) %>% distinct(notation)
+}
+
+write_atomic_csv <- function(df, path) {
+  tmp <- paste0(path, ".tmp_", as.integer(Sys.time()))
+  write_csv(df, tmp)
+  file.rename(tmp, path)
+}
+
+append_unique_notations <- function(existing_df, new_notations) {
+  new_df <- tibble(notation = as.character(new_notations)) %>% filter(!is.na(notation))
+  bind_rows(existing_df, new_df) %>% distinct(notation) %>% arrange(notation)
+}
+
+# Clean and reshape member rows to your canonical schema
 flatten_and_clean <- function(df) {
-  if (nrow(df) == 0) return(tibble())
+  if (is.null(df) || nrow(df) == 0) return(tibble())
   df <- as_tibble(df)
+  
+  # convert list cols to strings
   list_cols <- names(df)[sapply(df, is.list)]
   if (length(list_cols) > 0) {
     for (col in list_cols) {
-      df[[col]] <- sapply(df[[col]], function(x) {
+      df[[col]] <- vapply(df[[col]], function(x) {
         if (is.null(x) || length(x) == 0) return(NA_character_)
-        if (is.data.frame(x)) paste(apply(x,1,function(r) paste(r,collapse="|")), collapse=";")
-        else paste(as.character(x), collapse=";")
-      })
+        if (is.data.frame(x)) {
+          paste(apply(x, 1, function(r) paste(r, collapse = "|")), collapse = ";")
+        } else {
+          paste(as.character(x), collapse = ";")
+        }
+      }, character(1))
     }
   }
-  df %>%
-    select(
-      SMPT_USER_REFERENCE = hasSamplingPoint.notation,
-      SMPT_LONG_NAME      = hasSamplingPoint.prefLabel,
-      MEAS_SAMPLE_ID      = hasSample.isResultOf.id,
-      MEAS_DETERMINAND_CODE = observedProperty.notation,
-      DETE_DESC           = observedProperty.prefLabel,
-      MEAS_RESULT         = hasSimpleResult,
-      DETE_UNIT           = hasResult.hasUnit.notation,
-      UNIT_SHORT_DESC     = hasResult.hasUnit.altLabel,
-      SAMP_SAMPLE_DATE    = phenomenonTime
-    ) %>%
+  
+  out <- df %>%
+    transmute(
+      SMPT_USER_REFERENCE    = .data$hasSamplingPoint.notation,
+      SMPT_LONG_NAME         = .data$hasSamplingPoint.prefLabel,
+      MEAS_SAMPLE_ID         = .data$hasSample.isResultOf.id,
+      MEAS_DETERMINAND_CODE  = .data$observedProperty.notation,
+      DETE_DESC              = .data$observedProperty.prefLabel,
+      MEAS_RESULT            = .data$hasSimpleResult,
+      DETE_UNIT              = .data$hasResult.hasUnit.notation,
+      UNIT_SHORT_DESC        = .data$hasResult.hasUnit.altLabel,
+      SAMP_SAMPLE_DATE       = .data$phenomenonTime
+    )
+  
+  # robust parsing
+  out %>%
     mutate(
-      MEAS_SAMPLE_ID = as.numeric(sub(".*/","",MEAS_SAMPLE_ID)),
-      SAMP_DT = ymd_hms(SAMP_SAMPLE_DATE, quiet = TRUE),
+      MEAS_SAMPLE_ID = suppressWarnings(as.numeric(sub(".*/", "", as.character(MEAS_SAMPLE_ID)))),
+      SAMP_DT = suppressWarnings(ymd_hms(SAMP_SAMPLE_DATE, quiet = TRUE, tz = "UTC")),
       SAMP_SAMPLE_DATE = as.Date(SAMP_DT),
-      MEAS_SIGN = str_extract(MEAS_RESULT, "^[<>]"),
-      MEAS_RESULT = as.numeric(str_extract(MEAS_RESULT, "[0-9.]+"))
+      MEAS_SIGN = str_extract(as.character(MEAS_RESULT), "^[<>]"),
+      MEAS_RESULT = suppressWarnings(as.numeric(str_extract(as.character(MEAS_RESULT), "[0-9.]+")))
     ) %>%
     select(-SAMP_DT)
 }
 
+# Single determinand fetch with pagination
 fetch_determinand_for_site <- function(site, det, dateFrom, dateTo) {
   base_url <- paste0(base_sampling_point_url, "/", URLencode(site), "/observation")
   skip <- 0
   all_chunks <- list()
+  
   repeat {
     query <- list(
       skip = skip,
@@ -145,289 +186,458 @@ fetch_determinand_for_site <- function(site, det, dateFrom, dateTo) {
       dateTo = format(dateTo, "%Y-%m-%d"),
       complianceOnly = "false"
     )
+    
     res <- tryCatch(safe_api_GET(base_url, query), error = function(e) NULL)
     if (is.null(res)) return(tibble())
+    
     txt <- content(res, "text", encoding = "UTF-8")
-    j <- fromJSON(txt, simplifyVector = TRUE)
-    if (!"member" %in% names(j) || length(j$member) == 0) break
+    j <- tryCatch(fromJSON(txt, simplifyVector = TRUE), error = function(e) list())
+    
+    if (!("member" %in% names(j)) || length(j$member) == 0) break
+    
+    member_n <- length(j$member)
     df <- flatten_and_clean(as_tibble(jsonlite::flatten(j$member)))
-    all_chunks[[length(all_chunks)+1]] <- df
-    if (nrow(df) < per_call_limit) break
+    if (nrow(df) > 0) all_chunks[[length(all_chunks) + 1]] <- df
+    
+    #stop condition based on raw member length 
+    if (member_n < per_call_limit) break
+    
     skip <- skip + per_call_limit
     Sys.sleep(sleep_between_calls)
   }
-  if (length(all_chunks)==0) return(tibble())
+  
+  if (length(all_chunks) == 0) return(tibble())
   bind_rows(all_chunks)
 }
 
+# For a given site, fetch all determinands based on det_meta_df
+# det_meta_df columns required: det, latest_date
 fetch_updates_for_site <- function(site, det_meta_df, dateTo = Sys.Date()) {
   site_res <- list()
+  
   for (i in seq_len(nrow(det_meta_df))) {
     det <- det_meta_df$det[i]
     dateFrom <- det_meta_df$latest_date[i]
-    if (is.na(dateFrom)) dateFrom <- as.Date("2000-01-01")
+    
+    # Start at 2000 by default (new sites)  or 1 day after last baseline date
+    if (is.na(dateFrom)) dateFrom <- as.Date("2000-01-01") else dateFrom <- as.Date(dateFrom) + 1
+    
+    if (dateFrom > dateTo) next
+    
     new_df <- fetch_determinand_for_site(site, det, dateFrom, dateTo)
-    if (nrow(new_df) > 0) site_res[[length(site_res)+1]] <- new_df
+    if (nrow(new_df) > 0) site_res[[length(site_res) + 1]] <- new_df
   }
-  if (length(site_res)==0) return(tibble())
+  
+  if (length(site_res) == 0) return(tibble())
   bind_rows(site_res) %>% distinct()
 }
 
-# ============================================================
-# Read baseline year
-# ============================================================
+# Quick API confirmation for a site:
+# - tries a tiny call against first determinand with short date window
+# - returns TRUE if response is 2xx and parses or 2xx with empty member
+is_site_valid_api <- function(site, det = determinands_all[1]) {
+  url <- paste0(base_sampling_point_url, "/", URLencode(site), "/observation")
+  query <- list(
+    skip = 0,
+    limit = 1,
+    determinand = det,
+    dateFrom = "2000-01-01",
+    dateTo = format(Sys.Date(), "%Y-%m-%d"),
+    complianceOnly = "false"
+  )
+  res <- safe_api_GET(url, query)
+  if (is.null(res)) return(FALSE)
+  status <- status_code(res)
+  if (!(status >= 200 && status < 300)) return(FALSE)
+  
+  txt <- content(res, "text", encoding = "UTF-8")
+  j <- tryCatch(fromJSON(txt, simplifyVector = TRUE), error = function(e) NULL)
+  !is.null(j) && ("member" %in% names(j))
+}
 
-baseline_file <- list.files(
-  cache_dir,
-  pattern = "^HYPE_EFFLUENT_MONITORING_DATA_.*\\.rds$",
-  full.names = TRUE
-)
-baseline_file_name <- basename(baseline_file[1])
-baseline_date <- str_extract(baseline_file_name, "\\d{4}-\\d{2}-\\d{2}")
-baseline_year <- as.integer(substr(baseline_date, 1, 4))
+# Build det metadata from baseline for incremental update
+build_site_det_lookup <- function(baseline_df) {
+  meta <- baseline_df %>%
+    rename(notation = SMPT_USER_REFERENCE, det = MEAS_DETERMINAND_CODE) %>%
+    group_by(notation, det) %>%
+    summarise(latest_date = max(SAMP_SAMPLE_DATE, na.rm = TRUE), .groups = "drop")
+  
+  split(meta %>% select(det, latest_date), meta$notation)
+}
+
+# Create det metadata for a brand new site 
+build_new_site_det_meta <- function() {
+  tibble(det = determinands_all, latest_date = as.Date(NA))
+}
+
+# Transactional, resumable multi-site fetch
+# - writes each site result as RDS into update_temp_dir
+# - uses manifest to know what’s done
+fetch_all_sites_transactional <- function(
+    baseline_df,
+    site_det_lookup,
+    update_temp_dir,
+    workers_pct = 0.8,
+    max_retries = 10
+) {
+  dir.create(update_temp_dir, showWarnings = FALSE, recursive = TRUE)
+  manifest_path <- file.path(update_temp_dir, "manifest_done.csv")
+  
+  # read existing manifest
+  done <- if (file.exists(manifest_path)) {
+    suppressWarnings(read_csv(manifest_path, show_col_types = FALSE)) %>%
+      mutate(site = as.character(site)) %>%
+      distinct(site)
+  } else {
+    tibble(site = character())
+  }
+  
+  per_site_file <- function(site) file.path(update_temp_dir, paste0("data_", safe_site_filename(site)))
+  
+  # ALSO consider sites done if per-site file exists
+  existing_files <- list.files(update_temp_dir, pattern = "^data_site_.*\\.rds$", full.names = FALSE)
+  existing_sites <- gsub("^data_(site_.*)\\.rds$", "\\1", existing_files) # safe_site_filename output
+  # can't invert cleanly to original site; so manifest remains primary
+  
+  all_sites <- names(site_det_lookup)
+  
+  for (attempt in seq_len(max_retries)) {
+    sites_to_fetch <- setdiff(all_sites, done$site)
+    
+    message("Attempt ", attempt, ": fetching ", length(sites_to_fetch), " sites")
+    flush.console()
+    
+    if (length(sites_to_fetch) == 0) break
+    
+    workers <- max(1L, floor(future::availableCores() * workers_pct))
+    
+    # use multisession only during fetch
+    future::plan(future::multisession, workers = workers)
+    options(future.stdout = TRUE, future.globals.maxSize = 1e9)
+    
+    # fetch in parallel
+    fetched_sites <- future.apply::future_lapply(
+      sites_to_fetch,
+      function(site) {
+        det_meta <- site_det_lookup[[site]]
+        if (is.null(det_meta) || nrow(det_meta) == 0) {
+          saveRDS(tibble(), per_site_file(site))
+          return(site)
+        }
+        res <- fetch_updates_for_site(site, det_meta, Sys.Date())
+        saveRDS(res, per_site_file(site))
+        site
+      },
+      future.seed = TRUE
+    )
+    
+    future::plan(future::sequential)
+    
+    fetched_sites <- unlist(fetched_sites, use.names = FALSE)
+    if (length(fetched_sites) > 0) {
+      done <- bind_rows(done, tibble(site = fetched_sites)) %>% distinct(site)
+      write_atomic_csv(done, manifest_path)
+    }
+    
+    # if still not done, retry
+    if (nrow(done) == length(all_sites)) break
+    Sys.sleep(1)
+  }
+  
+  if (nrow(done) != length(all_sites)) {
+    stop("❌ Not all sites completed after ", max_retries, " attempts.")
+  }
+  
+  # Merge baseline + all per-site files
+  update_files <- list.files(update_temp_dir, pattern = "^data_.*\\.rds$", full.names = TRUE)
+  updates <- bind_rows(lapply(update_files, readRDS))
+  
+  bind_rows(baseline_df, updates) %>%
+    distinct(
+      SMPT_USER_REFERENCE,
+      MEAS_SAMPLE_ID,
+      MEAS_DETERMINAND_CODE,
+      .keep_all = TRUE
+    )
+}
+
+# Unified update runner for (effluent | xobs)
+run_update_pipeline <- function(
+    dataset_name,
+    baseline_pattern,
+    update_temp_dir,
+    invalid_sites_path,
+    site_list_df,
+    site_col = "notation",
+    forcing_year,
+    record_invalid_sites = TRUE   # <-- add this
+) {
+  message("\n==============================")
+  message("▶️  Updating: ", dataset_name)
+  message("==============================")
+  flush.console()
+  
+  baseline_file <- list.files(cache_dir, pattern = baseline_pattern, full.names = TRUE)
+  if (length(baseline_file) < 1) stop("❌ No baseline file found for ", dataset_name)
+  
+  baseline <- readRDS(baseline_file[1])
+  
+   baseline_max_year <- baseline %>%
+    mutate(yr = year(as.Date(SAMP_SAMPLE_DATE))) %>%
+    summarise(maxyr = suppressWarnings(max(yr, na.rm = TRUE))) %>%
+    pull(maxyr)
+  
+  if (is.infinite(baseline_max_year) || is.na(baseline_max_year)) baseline_max_year <- 0L
+  
+  skip_fetch <- baseline_max_year >= forcing_year
+  if (skip_fetch) {
+    message("ℹ️ ", dataset_name, " baseline max year (", baseline_max_year,
+            ") already covers forcing year (", forcing_year, "). Skipping fetch.")
+    flush.console()
+    baseline_updated <- baseline
+  } else {
+    message("📌 ", dataset_name, " baseline max year: ", baseline_max_year,
+            " | forcing year: ", forcing_year, " → fetching updates.")
+    flush.console()
+    
+    invalid_sites <- read_optional_csv1col(invalid_sites_path)
+    
+    site_det_lookup <- build_site_det_lookup(baseline)
+    
+    # Exclude closed sampling points from ALL fetching
+    # - prevents querying closed sites even if already in baseline
+    closed_path <- file.path(cache_dir, "closed_sampling_points.csv")
+    closed_sites <- read_optional_csv1col(closed_path)
+    
+    if (nrow(closed_sites) > 0) {
+      n_before <- length(site_det_lookup)
+      
+      site_det_lookup <- site_det_lookup[
+        !names(site_det_lookup) %in% closed_sites$notation
+      ]
+      
+      message(
+        "🚫 Removed ",
+        n_before - length(site_det_lookup),
+        " closed sites from update list."
+      )
+      flush.console()
+    }
+    
+    # onboard unknown sites (present in site list but not baseline lookup)
+    sites_in <- site_list_df %>%
+      mutate(site = as.character(.data[[site_col]])) %>%
+      filter(!is.na(site)) %>%
+      distinct(site)
+    
+    unknown_sites <- sites_in %>%
+      filter(!site %in% names(site_det_lookup)) %>%
+      filter(!site %in% invalid_sites$notation)
+    
+    message("🔎 Unknown sites needing API confirmation: ", nrow(unknown_sites))
+    flush.console()
+    
+    # Confirm unknown sites and add to lookup for full backfill
+    if (nrow(unknown_sites) > 0) {
+      closed_path <- file.path(cache_dir, "closed_sampling_points.csv")
+      closed_sites <- read_optional_csv1col(closed_path)
+      
+      valid_new <- character()
+      invalid_new <- character()
+      
+      for (s in unknown_sites$site) {
+        if (s %in% closed_sites$notation) {
+          invalid_new <- c(invalid_new, s)
+          next
+        }
+        ok <- is_site_valid_api(s)
+        if (ok) valid_new <- c(valid_new, s) else invalid_new <- c(invalid_new, s)
+      }
+      
+      if (length(valid_new) > 0) {
+        message("✅ Confirmed new sites (will backfill): ", length(valid_new))
+        for (s in valid_new) site_det_lookup[[s]] <- build_new_site_det_meta()
+      }
+      
+      if (length(invalid_new) > 0) {
+        if (record_invalid_sites) {
+          message("🚫 Invalid/closed/failed sites recorded: ", length(invalid_new))
+          invalid_sites2 <- append_unique_notations(invalid_sites, invalid_new)
+          write_atomic_csv(invalid_sites2, invalid_sites_path)
+        }
+      }
+      flush.console()
+    }
+    
+    # Transactional resumable update
+    baseline_updated <- fetch_all_sites_transactional(
+      baseline_df = baseline,
+      site_det_lookup = site_det_lookup,
+      update_temp_dir = update_temp_dir,
+      workers_pct = workers_pct,
+      max_retries = 10
+    )
+  }
+  
+  # Save outputs
+  timestamp <- format(Sys.Date(), "%Y-%m-%d")
+  new_file <- file.path(cache_dir, paste0(dataset_name, "_2000-", timestamp, ".rds"))
+  
+  saveRDS(baseline_updated, new_file)
+  if (!skip_fetch && file.exists(baseline_file[1])) file.remove(baseline_file[1])
+  
+  log_path <- file.path(cache_dir, paste0(tolower(dataset_name), "_data_log.csv"))
+  write_csv(
+    baseline_updated %>%
+      group_by(SMPT_USER_REFERENCE, MEAS_DETERMINAND_CODE) %>%
+      summarise(
+        n_obs = n(),
+        earliest_date = min(SAMP_SAMPLE_DATE, na.rm = TRUE),
+        latest_date = max(SAMP_SAMPLE_DATE, na.rm = TRUE),
+        .groups = "drop"
+      ),
+    log_path
+  )
+  
+  # Cleanup temp dir only if successful
+  unlink(update_temp_dir, recursive = TRUE, force = TRUE)
+  
+  list(
+    baseline_updated = baseline_updated,
+    new_file = new_file,
+    log_file = log_path,
+    skip_fetch = skip_fetch
+  )
+}
 
 # ============================================================
 # Read forcing metadata
 # ============================================================
 
-forcing_metadata_file <- here("ForcingData", "_forcing_metadata.rds")
-forcing_metadata <- readRDS(forcing_metadata_file)
+forcing_metadata <- readRDS(here("ForcingData", "_forcing_metadata.rds"))
 forcing_year <- forcing_metadata$latest_forcing_year
 
 # ============================================================
-# Determine whether to skip fetching
+# Load site lists
 # ============================================================
 
-skip_fetch <- baseline_year >= forcing_year
-
-if (skip_fetch) {
-  message("ℹ️ Effluent data (", baseline_year, 
-          ") already up to date for forcing data (", forcing_year, ").")
-  message("➡️ Skipping data fetch. Using existing baseline only.")
-  flush.console()
-  baseline_updated <- readRDS(baseline_file[1])
-} else {
-  
-  # ============================================================
-  # Load effluent site list
-  # ============================================================
-  eff_sites_in <- read_csv(
-    here("PointSourceData", "Discharges", "data_out", "effluent_monitoring_sites.csv"),
-    show_col_types = FALSE
-  )
-  
-  # ============================================================
-  # Load invalid sites list (if exists)
-  # ============================================================
-  invalid_sites_path <- file.path(cache_dir, "invalid_eff_sites.csv")
-  invalid_sites <- if (file.exists(invalid_sites_path)) {
-    read_csv(invalid_sites_path, show_col_types = FALSE) %>%
-      rename(notation = 1) %>%
-      mutate(notation = as.character(notation))
-  } else {
-    tibble(notation = character())
-  }
-  
-  # ============================================================
-  # Prepare directories
-  # ============================================================
-  dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
-  dir.create(update_temp_dir, showWarnings = FALSE, recursive = TRUE)
-  
-  # ============================================================
-  # Read full baseline & build site-det lookup
-  # ============================================================
-  baseline <- readRDS(baseline_file[1])
-  meta <- baseline %>%
-    rename(notation = SMPT_USER_REFERENCE, det = MEAS_DETERMINAND_CODE) %>%
-    group_by(notation, det) %>%
-    summarise(latest_date = max(SAMP_SAMPLE_DATE, na.rm = TRUE), .groups="drop")
-  site_det_lookup <- split(meta %>% select(det, latest_date), meta$notation)
-  
-  unknown_sites <- eff_sites_in %>%
-    filter(!notation %in% names(site_det_lookup)) %>%
-    filter(!notation %in% invalid_sites$notation)
-  
-  message("Potential new sites requiring API confirmation: ", nrow(unknown_sites))
-  flush.console()
-  
-  # ============================================================
-  # Fetch updates in parallel safely
-  # ============================================================
-  fetch_site_data <- function(max_retries = 10) {
-    
-    per_site_file <- function(site) {
-      file.path(update_temp_dir, paste0("data_", safe_site_filename(site)))
-    }
-    
-    for (attempt in seq_len(max_retries)) {
-      
-      sites_to_fetch <- names(site_det_lookup)[
-        !file.exists(vapply(names(site_det_lookup), per_site_file, character(1)))
-      ]
-      
-      message("Attempt ", attempt, ": fetching ", length(sites_to_fetch), " sites")
-      flush.console()
-      
-      result <- tryCatch({
-        
-        workers <- max(1L, floor(future::availableCores() * workers_pct))
-        future::plan(future::multisession, workers = workers)
-        
-        ## prevent huge accidental exports
-        options(
-          future.stdout = TRUE,
-          future.globals.maxSize = 1e9
-        )
-        
-        future.apply::future_lapply(
-          sites_to_fetch,
-          function(site) {
-            
-            det_meta <- site_det_lookup[[site]]
-            
-            if (is.null(det_meta)) {
-              saveRDS(tibble(), per_site_file(site))
-              return(NULL)
-            }
-            
-            res <- fetch_updates_for_site(site, det_meta, Sys.Date())
-            saveRDS(res, per_site_file(site))
-            NULL
-          },
-          future.seed = TRUE
-        )
-        
-        future::plan(future::sequential)
-        
-        bind_rows(
-          baseline,
-          bind_rows(lapply(
-            list.files(update_temp_dir, pattern = "^data_.*\\.rds$", full.names = TRUE),
-            readRDS
-          ))
-        ) %>%
-          distinct(
-            SMPT_USER_REFERENCE,
-            MEAS_SAMPLE_ID,
-            MEAS_DETERMINAND_CODE,
-            .keep_all = TRUE
-          )
-        
-      }, error = function(e) {
-        message("⚠️ Attempt failed: ", conditionMessage(e))
-        NULL
-      })
-      
-      if (!is.null(result)) return(result)
-      
-      Sys.sleep(2)
-    }
-    
-    stop("❌ All sites could not be fetched after ", max_retries, " attempts.")
-  }
-  
-  
-  baseline_updated <- fetch_site_data()
-  
-} # end skip_fetch branch
-
-# ============================================================
-# Save outputs
-# ============================================================
-
-timestamp <- format(Sys.Date(), "%Y-%m-%d")
-new_file <- file.path(
-  cache_dir,
-  paste0("HYPE_EFFLUENT_MONITORING_DATA_2000-", timestamp, ".rds")
+#sites lists must contain column "notation"
+eff_sites_in <- read_csv(
+  here("PointSourceData", "Discharges", "data_out", "effluent_monitoring_sites.csv"),
+  show_col_types = FALSE
 )
 
-saveRDS(baseline_updated, new_file)
-if (!skip_fetch && file.exists(baseline_file[1])) file.remove(baseline_file[1])
+if (!("notation" %in% names(eff_sites_in))) {
+  stop("❌ effluent_monitoring_sites.csv must contain a 'notation' column.")
+}
 
-write_csv(
-  baseline_updated %>%
-    group_by(SMPT_USER_REFERENCE, MEAS_DETERMINAND_CODE) %>%
-    summarise(
-      n_obs = n(),
-      earliest_date = min(SAMP_SAMPLE_DATE, na.rm = TRUE),
-      latest_date = max(SAMP_SAMPLE_DATE, na.rm = TRUE),
-      .groups = "drop"
-    ),
-  file.path(cache_dir, "effluent_data_log.csv")
+xobs_lut <- read_csv(
+  here("XobsData", "Xobs_sites_SUBID_lut.csv"),
+  show_col_types = FALSE
 )
 
-unlink(update_temp_dir, recursive = TRUE, force = TRUE)
+
+if (!"notation" %in% names(xobs_lut)) {
+  stop("❌ Xobs_sites_SUBID_lut.csv must contain column 'notation'")
+}
 
 # ============================================================
-# Determine sites valid for quantitative analysis
+# Update effluent dataset
 # ============================================================
-message("🕵️ Identifying site-dets suitable for quantitative analysis")
+
+eff <- run_update_pipeline(
+  dataset_name = "HYPE_EFFLUENT_MONITORING_DATA",
+  baseline_pattern = "^HYPE_EFFLUENT_MONITORING_DATA_.*\\.rds$",
+  update_temp_dir = eff_update_tmp,
+  invalid_sites_path = file.path(cache_dir, "invalid_eff_sites.csv"),
+  site_list_df = eff_sites_in,
+  site_col = "notation",
+  forcing_year = forcing_year
+)
+
+baseline_updated <- eff$baseline_updated
+eff_new_file <- eff$new_file
+eff_log_file <- eff$log_file
+
+# ============================================================
+# Determine sites valid for quantitative analysis (effluent)
+# ============================================================
+
+message("\n🕵️ Identifying site-dets suitable for quantitative analysis")
 flush.console()
 
-# check which monitoring points and det combination meet the minimum 
-# requirement of 12 samples over 2 years for quantitative assessment 
-
-quant_PS_list <- baseline_updated %>% 
-  #filter for effluent monitoring sites
+quant_PS_list <- baseline_updated %>%
   filter(SMPT_USER_REFERENCE %in% eff_sites_in$notation) %>%
-  mutate(samp_yr = strftime(SAMP_SAMPLE_DATE, "%Y")) %>%
-  group_by(SMPT_USER_REFERENCE, MEAS_DETERMINAND_CODE) %>% 
+  mutate(samp_yr = year(as.Date(SAMP_SAMPLE_DATE))) %>%
+  group_by(SMPT_USER_REFERENCE, MEAS_DETERMINAND_CODE) %>%
   summarise(
     n_yrs = n_distinct(samp_yr),
     n_samps = n(),
-    sufficient = case_when(
-      n_yrs > 1 & n_samps > 11 ~ "Y",
-      TRUE ~ "N"
-    ),
+    sufficient = if_else(n_yrs > 1 & n_samps > 11, "Y", "N"),
     .groups = "drop"
-  ) %>% 
+  ) %>%
   filter(sufficient == "Y") %>%
   ungroup()
 
-#load WIMS-WISKI lookup
-
+# Load WIMS-WISKI lookup and append Flow_m3s eligibility
 wims_wiski_lut <- read_tsv(
-  here(
-    "PointSourceData", "Discharges", "data_in", "WISKI_to_WIMS_LUT.txt"
-    )
-  ) %>%
-  #filter for wims sites in effluent data
+  here("PointSourceData", "Discharges", "data_in", "WISKI_to_WIMS_LUT.txt"),
+  show_col_types = FALSE
+) %>%
   filter(SMPT_USER_REFERENCE %in% baseline_updated$SMPT_USER_REFERENCE) %>%
-  mutate(MEAS_DETERMINAND_CODE = "Flow_m3s", 
-         sufficient = "Y") 
+  mutate(
+    MEAS_DETERMINAND_CODE = "Flow_m3s",
+    sufficient = "Y"
+  )
 
 quant_PS_list <- quant_PS_list %>%
   bind_rows(wims_wiski_lut) %>%
-  # flag sites that aren't quantitative for flow by setting the flow det to NA
-  mutate(MEAS_DETERMINAND_CODE = case_when(MEAS_DETERMINAND_CODE == "Flow_m3s" 
-                                           & is.na(WISKI_STATION) ~ NA_character_, 
-                                           .default = MEAS_DETERMINAND_CODE)) %>%
-  group_by(SMPT_USER_REFERENCE) %>% 
+  mutate(
+    MEAS_DETERMINAND_CODE = case_when(
+      MEAS_DETERMINAND_CODE == "Flow_m3s" & is.na(WISKI_STATION) ~ NA_character_,
+      TRUE ~ MEAS_DETERMINAND_CODE
+    )
+  ) %>%
+  group_by(SMPT_USER_REFERENCE) %>%
   mutate(
     quant_for = toString(sort(unique(na.omit(MEAS_DETERMINAND_CODE))))
   ) %>%
   ungroup()
 
-
-quant_PS_file <- here(
-  "PointSourceData","Discharges","data_out", "sites_for_quant_analysis.csv"
-)
+quant_PS_file <- here("PointSourceData", "Discharges", "data_out", "sites_for_quant_analysis.csv")
 write_csv(quant_PS_list, quant_PS_file)
-  
+
+# ============================================================
+# Fetch and update Xobs data 
+# ============================================================
+
+xobs <- run_update_pipeline(
+  dataset_name = "HYPE_XOBS_DATA",
+  baseline_pattern = "^HYPE_XOBS_DATA_.*\\.rds$",
+  update_temp_dir = xobs_update_tmp,
+  invalid_sites_path = file.path(cache_dir, "closed_sampling_points.csv"),
+  site_list_df = xobs_lut,
+  site_col = "notation",
+  forcing_year = forcing_year,
+  record_invalid_sites = FALSE
+)
+
+xobs_new_file <- xobs$new_file
+xobs_log_file <- xobs$log_file
 
 # ============================================================
 # Declare outputs
 # ============================================================
 
-message("✅ Effluent update complete")
+message("\n✅ Effluent + Xobs update complete")
 flush.console()
 
 declared_outputs <- c(
-  new_file,
-  file.path(cache_dir, "effluent_data_log.csv"),
-  quant_PS_file
+  eff_new_file,
+  eff_log_file,
+  quant_PS_file,
+  xobs_new_file,
+  xobs_log_file
 )
 
 declared_outputs
-
