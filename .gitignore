@@ -43,7 +43,7 @@ QObs/data_out/
 
 
 # ---- XObs ----
-XobsData/
+XobsData/*
 
 
 # Dev scripts
