@@ -28,7 +28,7 @@ PointSourceData/Abstractions/data_in/WRGIS_data/
 PointSourceData/Abstractions/data_out/WRGIS_data/
 
 # ---- Geo ----
-GeoData/
+GeoData/*
 
 
 # ---- Forcing ----
