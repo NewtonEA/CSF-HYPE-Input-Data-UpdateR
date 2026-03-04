@@ -1,5 +1,5 @@
 # ============================================================
-# Create Xobs.txt input file for CSF-HYPE (data.table version)
+# Create Xobs.txt input file for CSF-HYPE 
 # ============================================================
 
 message("🛠️ Creating Xobs file...")
