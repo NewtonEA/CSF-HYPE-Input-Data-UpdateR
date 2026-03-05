@@ -25,8 +25,7 @@ pacman::p_load(
 
 # required input files
 required_inputs <- c(
-  here("PointSourceData", "Discharges", "data_in", "Consented Discharges to Controlled Waters with Conditions.accdb"),
-  here("PointSourceData", "Discharges", "data_in", "excluded_consent_types.csv"),
+    here("PointSourceData", "Discharges", "data_in", "excluded_consent_types.csv"),
   here("GeoData", "Eco_HYPE_SUBBASINS.gpkg")
 )
 
