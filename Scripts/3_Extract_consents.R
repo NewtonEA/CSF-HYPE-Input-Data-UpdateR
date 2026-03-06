@@ -529,6 +529,7 @@ if (all(is.na(consents_processed$OUTLET_X)) || all(is.na(consents_processed$OUTL
 # ============================================================
 #       Import Welsh consents from NRW datamap WFS      
 # ============================================================
+Sys.setenv(GDAL_HTTP_UNSAFESSL = "YES") # workaround for disable SSL verification on EA systems
 
 message("🌍 Reading Welsh consents from NRW DataMap WFS...")
 flush.console()

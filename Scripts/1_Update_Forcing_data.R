@@ -48,21 +48,6 @@ if (length(missing_inputs) > 0) {
   )
 }
 
-# required directories
-required_dirs <- c(
-  here("ForcingData", "Rainfall"),
-  here("ForcingData", "Temperature")
-)
-
-missing_dirs <- required_dirs[!dir.exists(required_dirs)]
-
-if (length(missing_dirs) > 0) {
-  stop(
-    "Missing required directories:\n",
-    paste(missing_dirs, collapse = "\n")
-  )
-}
-
 # set paths
 forcing_dir <- here("ForcingData")
 temp_dir <- file.path(forcing_dir, "Temperature")
