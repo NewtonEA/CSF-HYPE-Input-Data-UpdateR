@@ -93,6 +93,7 @@ Each step:
 
 - **R ≥ 4.5**
 - RStudio (recommended)
+- RTools
 
 ### Accounts & Access
 
