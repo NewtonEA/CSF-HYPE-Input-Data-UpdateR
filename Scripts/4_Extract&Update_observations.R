@@ -270,6 +270,38 @@ build_new_site_det_meta <- function() {
   tibble(det = determinands_all, latest_date = as.Date(NA))
 }
 
+# Build compact per-site job objects for parallel workers
+# - avoids exporting the full site_det_lookup object to every worker
+# - each worker receives only the site id plus that site's determinand metadata
+build_site_jobs <- function(sites_to_fetch, site_det_lookup) {
+  jobs <- lapply(sites_to_fetch, function(site) {
+    list(
+      site = site,
+      det_meta = site_det_lookup[[site]]
+    )
+  })
+  names(jobs) <- sites_to_fetch
+  jobs
+}
+
+# Top-level worker for futures
+# - defined at top level so it does not capture large parent environments
+# - writes one per-site RDS output and returns the completed site id
+fetch_site_worker <- function(job, update_temp_dir, date_to = Sys.Date()) {
+  site <- job$site
+  det_meta <- job$det_meta
+  out_file <- file.path(update_temp_dir, paste0("data_", safe_site_filename(site)))
+  
+  if (is.null(det_meta) || nrow(det_meta) == 0) {
+    saveRDS(tibble(), out_file)
+    return(site)
+  }
+  
+  res <- fetch_updates_for_site(site, det_meta, date_to)
+  saveRDS(res, out_file)
+  site
+}
+
 # Transactional, resumable multi-site fetch
 # - writes each site result as RDS into update_temp_dir
 # - uses manifest to know what’s done
@@ -292,12 +324,21 @@ fetch_all_sites_transactional <- function(
     tibble(site = character())
   }
   
+  # per-site output naming convention retained for resumable transactional fetches
   per_site_file <- function(site) file.path(update_temp_dir, paste0("data_", safe_site_filename(site)))
   
   # ALSO consider sites done if per-site file exists
   existing_files <- list.files(update_temp_dir, pattern = "^data_site_.*\\.rds$", full.names = FALSE)
-  existing_sites <- gsub("^data_(site_.*)\\.rds$", "\\1", existing_files) # safe_site_filename output
-  # can't invert cleanly to original site; so manifest remains primary
+  existing_sites_safe <- gsub("^data_(site_.*)\\.rds$", "\\1", existing_files) # safe_site_filename output
+  
+  # recover completed sites from existing per-site files if manifest is missing / incomplete
+  # - because the safe filename transform is not reliably invertible, we only auto-recover
+  #   where the original site id is unchanged by safe_site_filename()
+  recoverable_sites <- names(site_det_lookup)[safe_site_filename(names(site_det_lookup)) %in% existing_sites_safe]
+  
+  if (length(recoverable_sites) > 0) {
+    done <- bind_rows(done, tibble(site = recoverable_sites)) %>% distinct(site)
+  }
   
   all_sites <- names(site_det_lookup)
   
@@ -311,23 +352,20 @@ fetch_all_sites_transactional <- function(
     
     workers <- max(1L, floor(future::availableCores() * workers_pct))
     
+    # build compact per-site jobs before entering futures
+    # - this keeps worker exports small and prevents shipping the full lookup
+    site_jobs <- build_site_jobs(sites_to_fetch, site_det_lookup)
+    
     # use multisession only during fetch
     future::plan(future::multisession, workers = workers)
-    options(future.stdout = TRUE, future.globals.maxSize = 1e9)
+    options(future.stdout = TRUE)
     
     # fetch in parallel
     fetched_sites <- future.apply::future_lapply(
-      sites_to_fetch,
-      function(site) {
-        det_meta <- site_det_lookup[[site]]
-        if (is.null(det_meta) || nrow(det_meta) == 0) {
-          saveRDS(tibble(), per_site_file(site))
-          return(site)
-        }
-        res <- fetch_updates_for_site(site, det_meta, Sys.Date())
-        saveRDS(res, per_site_file(site))
-        site
-      },
+      site_jobs,
+      FUN = fetch_site_worker,
+      update_temp_dir = update_temp_dir,
+      date_to = Sys.Date(),
       future.seed = TRUE
     )
     
@@ -370,7 +408,7 @@ run_update_pipeline <- function(
     site_list_df,
     site_col = "notation",
     forcing_year,
-    record_invalid_sites = TRUE   # <-- add this
+    record_invalid_sites = TRUE   
 ) {
   message("\n==============================")
   message("▶️  Updating: ", dataset_name)
@@ -382,7 +420,7 @@ run_update_pipeline <- function(
   
   baseline <- readRDS(baseline_file[1])
   
-   baseline_max_year <- baseline %>%
+  baseline_max_year <- baseline %>%
     mutate(yr = year(as.Date(SAMP_SAMPLE_DATE))) %>%
     summarise(maxyr = suppressWarnings(max(yr, na.rm = TRUE))) %>%
     pull(maxyr)
