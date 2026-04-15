@@ -244,24 +244,35 @@ if (length(new_data_files) == 0) {
     
     header_row <- NA_integer_
     
-    for (i in 1:min(max_scan, nrow(raw))) {
+    # 1) check row 2 first (most common case)
+    i <- 2
+    
+    row_vals <- as.character(unlist(raw[i, ]))
+    row_clean <- toupper(gsub("[^A-Z0-9 ]", "", row_vals))
+    
+    non_empty <- sum(!is.na(row_vals) & trimws(row_vals) != "")
+    text_like <- sum(grepl("[A-Z]", row_clean))
+    
+    if (non_empty >= 5 && text_like >= 3) {
+      header_row <- i
+    } else {
       
-      row_vals <- as.character(unlist(raw[i, ]))
-      
-      if (all(is.na(row_vals) | trimws(row_vals) == "")) next
-      
-      row_clean <- toupper(gsub("[^A-Z0-9 ]", "", row_vals))
-      
-      # Count meaningful (non-empty) cells
-      non_empty <- sum(!is.na(row_vals) & trimws(row_vals) != "")
-      
-      # Count "text-like" cells (not just numbers)
-      text_like <- sum(grepl("[A-Z]", row_clean))
-      
-      # Heuristic: header rows have multiple populated text columns
-      if (non_empty >= 5 && text_like >= 3) {
-        header_row <- i
-        break
+      # 2) fallback scan from row 3 onwards
+      for (i in 3:min(max_scan, nrow(raw))) {
+        
+        row_vals <- as.character(unlist(raw[i, ]))
+        
+        if (all(is.na(row_vals) | trimws(row_vals) == "")) next
+        
+        row_clean <- toupper(gsub("[^A-Z0-9 ]", "", row_vals))
+        
+        non_empty <- sum(!is.na(row_vals) & trimws(row_vals) != "")
+        text_like <- sum(grepl("[A-Z]", row_clean))
+        
+        if (non_empty >= 5 && text_like >= 3) {
+          header_row <- i
+          break
+        }
       }
     }
     
@@ -341,7 +352,8 @@ if (length(new_data_files) == 0) {
     )
   
   if (!is.null(existing_data)) {
-    updated_data <- bind_rows(existing_data, new_data) %>% distinct()
+    updated_data <- bind_rows(existing_data, new_data) %>% 
+      distinct(Water_Company_Name, Site_Name, PERMIT_NUMBER, Return_yr, .keep_all = TRUE)
     years_existing <- paste(unique(existing_data$Return_yr), collapse = ", ")
     years_new <- paste(unique(new_data$Return_yr), collapse = ", ")
     message(paste0("⚙️ Appended new data (existing years: ", years_existing, "; new years added: ", years_new, ")"))
@@ -360,6 +372,7 @@ if (length(new_data_files) == 0) {
 if (!is.null(updated_data)) {
   yr_min <- min(updated_data$Return_yr, na.rm = TRUE)
   yr_max <- max(updated_data$Return_yr, na.rm = TRUE)
+  dir.create(existing_dir, recursive = TRUE, showWarnings = FALSE)
   out_file <- file.path(existing_dir,"EDM_returns_collated.rds")
   write_rds(updated_data, out_file)
   message(paste0("💾 Collated EDM returns written: ", out_file, " (rows: ", nrow(updated_data), ")"))
