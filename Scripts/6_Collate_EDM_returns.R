@@ -100,7 +100,7 @@ new_data_files <- list.files(
 )
 
 # Attempt auto-download if folder empty (deafault)
-    # but allow returns to be manually added if auto-download fails 
+# but allow returns to be manually added if auto-download fails 
 if (length(new_data_files) == 0 || current_latest_yr > 0) {
   
   message("⚠️ Checking for newer EDM Annual Return ZIPs online...")
@@ -208,8 +208,14 @@ if (length(new_data_files) == 0) {
   
   check_and_select_columns <- function(df, file, sheet) {
     raw_names <- colnames(df)
-    clean_names <- toupper(gsub("[\r\n]", " ", raw_names)) %>% trimws()
-    clean_names_alpha <- gsub("[^A-Z0-9 ]", "", clean_names)
+    clean_names <- raw_names %>%
+      toupper() %>%
+      gsub("[\r\n]", " ", .) %>%
+      gsub("[^A-Z0-9 ]", "", .) %>%
+      gsub("\\s+", " ", .) %>%
+      trimws()
+    
+    clean_names_alpha <- clean_names
     
     matched_cols <- character(0)
     for (kw in required_keywords) {
@@ -223,6 +229,79 @@ if (length(new_data_files) == 0) {
   }
   
   # =========================
+  # Robust sheet reader
+  # =========================
+  read_edm_sheet <- function(file, sheet, required_keywords, max_scan = 30) {
+    
+    raw <- readxl::read_excel(
+      file,
+      sheet = sheet,
+      col_names = FALSE,
+      col_types = "text"
+    )
+    
+    if (nrow(raw) == 0) return(NULL)
+    
+    header_row <- NA_integer_
+    
+    for (i in 1:min(max_scan, nrow(raw))) {
+      
+      row_vals <- as.character(unlist(raw[i, ]))
+      
+      if (all(is.na(row_vals) | trimws(row_vals) == "")) next
+      
+      row_clean <- toupper(gsub("[^A-Z0-9 ]", "", row_vals))
+      
+      # Count meaningful (non-empty) cells
+      non_empty <- sum(!is.na(row_vals) & trimws(row_vals) != "")
+      
+      # Count "text-like" cells (not just numbers)
+      text_like <- sum(grepl("[A-Z]", row_clean))
+      
+      # Heuristic: header rows have multiple populated text columns
+      if (non_empty >= 5 && text_like >= 3) {
+        header_row <- i
+        break
+      }
+    }
+    
+    if (is.na(header_row)) {
+      stop(paste0(
+        "❌ Failed to detect header row in file: ",
+        basename(file),
+        " sheet: ",
+        sheet
+      ))
+    }
+    
+    message(paste0("🔍 Header detected on row ", header_row, " in sheet: ", sheet))
+    flush.console()
+    
+    headers <- as.character(unlist(raw[header_row, ]))
+    
+    headers <- headers %>%
+      gsub("[\r\n]", " ", .) %>%
+      gsub("\\s+", " ", .) %>%
+      trimws()
+    
+    headers[headers == "" | is.na(headers)] <- paste0("X", seq_along(headers))[headers == "" | is.na(headers)]
+    
+    colnames(raw) <- headers
+    
+    data <- raw[(header_row + 1):nrow(raw), , drop = FALSE]
+    
+    if (nrow(data) == 0) return(NULL)
+    
+    data <- data[rowSums(is.na(data) | trimws(data) == "") < ncol(data), ]
+    
+    if (nrow(data) == 0) return(NULL)
+    
+    cleaned <- check_and_select_columns(data, file, sheet)
+    
+    return(cleaned)
+  }
+  
+  # =========================
   # Read & clean all sheets
   # =========================
   all_sheets_data <- list()
@@ -232,13 +311,17 @@ if (length(new_data_files) == 0) {
     sheets <- excel_sheets(file)
     
     for (sheet in sheets) {
-      sheet_data <- read_excel(file, sheet = sheet, skip = 1, col_types = "text", col_names = TRUE)
-      if (nrow(sheet_data) == 0) next
-      cleaned <- check_and_select_columns(sheet_data, file, sheet)
+      
+      cleaned <- read_edm_sheet(file, sheet, required_keywords)
+      
+      if (is.null(cleaned)) next
+      
       cleaned$Return_yr <- reporting_year
       cleaned$._source_file <- fn
       cleaned$._source_sheet <- sheet
+      
       all_sheets_data[[paste0(fn, "_", sheet)]] <- cleaned
+      
       message(paste0("📄 Read & cleaned sheet: '", sheet, "' from ", fn))
       flush.console()
     }
@@ -308,4 +391,3 @@ declared_outputs <- c(
 )
 
 declared_outputs
-
