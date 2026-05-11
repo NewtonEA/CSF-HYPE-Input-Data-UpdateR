@@ -87,7 +87,7 @@ read_psmonthly_data <- function(path) {
   psid_row <- as.character(unlist(dt[1]))
   vars     <- names(dt)
   
-  #  Date column PSID marker should be "0"
+  # Date column PSID marker should be "0"
   if (trimws(psid_row[1]) != "0") {
     stop(
       "Row 1, Date column expected '0' but found '", psid_row[1],
@@ -96,7 +96,6 @@ read_psmonthly_data <- function(path) {
   }
   
   # Build merge-safe names SUBSTANCE_PSID
-  # Date stays Date; everything else gets suffixed with PSID from row 1
   new_names <- c("Date", paste0(vars[-1], "_", psid_row[-1]))
   setnames(dt, new_names)
   
@@ -107,9 +106,9 @@ read_psmonthly_data <- function(path) {
   dt[, Date := as.character(Date)]
   
   # Convert all non-Date cols to numeric
-  for (cc in setdiff(names(dt), "Date")) {
-    suppressWarnings(set(dt, j = cc, value = as.numeric(dt[[cc]])))
-  }
+  num_cols <- setdiff(names(dt), "Date")
+  
+  dt[, (num_cols) := lapply(.SD, as.numeric), .SDcols = num_cols]
   
   # Should now be unique
   if (anyDuplicated(names(dt)) > 0) {
@@ -142,7 +141,8 @@ psm_data_list <- lapply(psm_paths, read_psmonthly_data)
 message("🗓️ Aligning date ranges across components...")
 flush.console()
 
-all_dates <- sort(unique(unlist(lapply(psm_data_list, `[[`, "Date"))))
+all_dates <- unique(do.call(c, lapply(psm_data_list, `[[`, "Date")))
+all_dates <- sort(all_dates)
 
 psm_data_list <- lapply(psm_data_list, function(dt) {
   setkey(dt, Date)
@@ -168,14 +168,19 @@ if (length(bad) > 0) {
 # ============================================================
 # Combine into single DT
 # ============================================================
+
 message("🧩 Combining PSMonthlySeries components...")
 flush.console()
 
-merged_dt <- copy(psm_data_list[[1]])
-for (i in 2:length(psm_data_list)) {
-  merged_dt <- cbind(merged_dt, psm_data_list[[i]][, !"Date"])
-}
+# Remove Date from all but first table
+dt_list <- c(
+  list(psm_data_list[[1]]),
+  lapply(psm_data_list[-1], function(x) x[, !"Date"])
+)
 
+merged_dt <- data.table::as.data.table(
+  do.call(cbind, dt_list)
+)
 # ============================================================
 # Fill missing dates / gaps with -9999 (explicit missing flag)
 # ============================================================
@@ -189,26 +194,21 @@ for (cc in data_cols) {
 }
 
 # ============================================================
-# Rebuild final HYPE header rows and write PSMonthlySeries.txt
+# Build and write PSMonthlySeries.txt
 # ============================================================
+
 message("🧾 Building HYPE header rows...")
 flush.console()
 
-# final sanity check for duplicated PSIDs 
-# it shouldn't happen if the pipeline has been run successfully from start 
-# but if some scripts have been run manually or a partial pipline run it 
-# is possible
 dup <- names(merged_dt)[duplicated(names(merged_dt))]
 if (length(dup) > 0) {
   stop(
-    "merged_dt has duplicated column names (cannot write header rows). Examples:\n",
+    "merged_dt has duplicated column names. Examples:\n",
     paste(head(unique(dup), 20), collapse = ", ")
   )
 }
 
-
 cols <- setdiff(names(merged_dt), "Date")
-
 
 # Header row 1: variable name
 header1 <- c("Date", sub("_.*$", "", cols))
@@ -216,25 +216,31 @@ header1 <- c("Date", sub("_.*$", "", cols))
 # Header row 2: PSID
 header2 <- c("0", sub("^.*_", "", cols))
 
-header1_dt <- as.data.table(as.list(header1))
-header2_dt <- as.data.table(as.list(header2))
-setnames(header1_dt, names(merged_dt))
-setnames(header2_dt, names(merged_dt))
-
-final_psm <- rbindlist(list(header1_dt, header2_dt, merged_dt), use.names = TRUE)
-
 message("💾 Writing final PSMonthlySeries.txt...")
 flush.console()
 
-fwrite(
-  final_psm,
-  psmonthly_txt_path,
-  sep   = "\t",
-  quote = FALSE,
-  na    = "-9999", 
-  col.names = FALSE
+# Write header lines manually
+writeLines(
+  paste(header1, collapse = "\t"),
+  psmonthly_txt_path
 )
 
+write(
+  paste(header2, collapse = "\t"),
+  file = psmonthly_txt_path,
+  append = TRUE
+)
+
+# Append data table
+fwrite(
+  merged_dt,
+  psmonthly_txt_path,
+  sep = "\t",
+  quote = FALSE,
+  na = "-9999",
+  col.names = FALSE,
+  append = TRUE
+)
 # ============================================================
 # Build and write PointSourceData.txt (subset master to PSIDs present)
 # ============================================================

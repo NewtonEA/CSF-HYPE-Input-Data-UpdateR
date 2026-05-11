@@ -704,8 +704,7 @@ declared_outputs <- c(
   
   # Missing effluent sites after quantitative join (conditional)
   here(
-    "PointSourceData", "Discharges", "data_out",
-    "missing_effluent_sites_after_quant_join.csv"
+    "PointSourceData", "Discharges", "data_out"
   )
 )
 

@@ -76,7 +76,7 @@ xob_dt <- xob_dt[
 # Pivot determinands wide (det codes become columns)
 # ============================================================
 xob_dt <- dcast(
-  xob_daily,
+  xob_dt,
   SUBID + date ~ MEAS_DETERMINAND_CODE,
   value.var = "MEAS_RESULT"
 )
