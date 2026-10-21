@@ -107,7 +107,7 @@ invisible(
 get_file_listing <- function(variable) {
   latest_url <- paste0(
     "https://data.ceda.ac.uk/badc/ukmo-hadobs/data/insitu/MOHC/HadOBS/HadUK-Grid/",
-    "v1.3.1.ceda/1km/", variable, "/day/latest"
+    "v1.3.2.ceda/1km/", variable, "/day/v20260512/"
   )
   
   resolved_url <- system2(
