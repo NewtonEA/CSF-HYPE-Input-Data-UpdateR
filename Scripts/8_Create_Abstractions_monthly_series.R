@@ -72,13 +72,25 @@ forcing_year <- forcing_metadata$latest_forcing_year
 
 
 # ============================================================
-# read in and merge all returns from the excel workbooks
+# read in and merge all returns  Excel workbooks and/or CSV files
 # ============================================================
 message("📚Reading Abstraction returns workbooks")
 flush.console()
 
 # find and list all the various returns workbooks 
-file.list <- list.files(returns_dir, pattern='*.xlsx', recursive = TRUE, full.names = TRUE)
+file.list <- list.files(
+  returns_dir,
+  pattern='*.xlsx',
+  recursive = TRUE,
+  full.names = TRUE)
+
+# find any CSV returns files
+csv.list <- list.files(
+  returns_dir,
+  pattern = "\\.csv$",
+  recursive = TRUE,
+  full.names = TRUE
+)
 
 # read the first sheet of all workbooks
 df.list1 <- lapply(file.list, read_excel, progress = TRUE)
@@ -109,6 +121,38 @@ for (i in 1:length(n_sheets)) {
     df_i <- read_excel(file.list[i], sheet = 3, col_names = headers) 
     df.list3 <- bind_rows(df.list3, df_i)
   }
+}
+
+# ============================================================
+# Read any CSV returns files 
+# ============================================================
+
+if (length(csv.list) > 0) {
+  
+  df.csv <- lapply(csv.list, function(f) {
+    
+    tmp <- read_csv(
+      f,
+      show_col_types = FALSE,
+      progress = FALSE
+    )
+    
+    # Ensure same columns as Excel imports
+    missing_cols <- setdiff(headers, names(tmp))
+    
+    if (length(missing_cols) > 0) {
+      tmp[missing_cols] <- NA
+    }
+    
+    tmp[, headers, drop = FALSE]
+    
+  }) %>%
+    bind_rows()
+  
+} else {
+  
+  df.csv <- tibble()
+  
 }
 
 # the spatial information for abstractions come in seperate workbooks (WQ request ....details), 
@@ -147,8 +191,11 @@ return_fractions <- read_csv(here("PointSourceData", "Abstractions",
   rename(`Use Code` = Use_Code) %>% 
   distinct(`Use Code`, .keep_all = T)
 
-# combine all returns
-all_returns <- bind_rows(df.list1, df.list2, df.list3) 
+# combine all returns (Excel + CSV)
+all_returns <- bind_rows(
+  bind_rows(df.list1, df.list2, df.list3),
+  df.csv
+)
 
 message("✅Returns data collated")
 flush.console()
@@ -755,7 +802,7 @@ write_tsv(
   append = FALSE)
 
 message(paste0("💾 Abstractions PSMonthlySeries & PSData written to: \n", 
-        output_dir))
+               output_dir))
 flush.console()
 message("🏁 Script 8 complete!")
 flush.console()
