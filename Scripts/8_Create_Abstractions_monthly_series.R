@@ -208,7 +208,8 @@ if (length(csv.list) > 0) {
 all_returns <- bind_rows(
   excel_returns,
   csv_returns
-) 
+) %>% 
+  mutate(`Point ID` = as.numeric(`Point ID`))
 
 # the spatial information for abstractions come in seperate workbooks (WQ request ....details), 
 # all these workbooks should be added to the returns_details folder
