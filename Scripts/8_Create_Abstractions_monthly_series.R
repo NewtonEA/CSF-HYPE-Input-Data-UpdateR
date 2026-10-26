@@ -128,7 +128,7 @@ if (length(file.list) > 0) {
 }
 
 # ============================================================
-# Helper function
+# Helper function to standardise sheets 
 # ============================================================
 
 standardise_cols <- function(df, headers) {
@@ -156,11 +156,15 @@ if (length(file.list) > 0) {
     
     lapply(sheets, function(s) {
       
-      read_excel(
-        f,
-        sheet = s
-      ) %>%
-        standardise_cols(headers)
+      df <- read_excel(f, sheet = s)
+      
+      # Skip empty sheets
+      if (nrow(df) == 0) return(NULL)
+      
+      # Skip non-data sheets
+      if (!"Abstraction Date" %in% names(df)) return(NULL)
+      
+      standardise_cols(df, headers)
       
     }) %>%
       bind_rows()
@@ -204,9 +208,7 @@ if (length(csv.list) > 0) {
 all_returns <- bind_rows(
   excel_returns,
   csv_returns
-)
-
-
+) 
 
 # the spatial information for abstractions come in seperate workbooks (WQ request ....details), 
 # all these workbooks should be added to the returns_details folder
@@ -267,7 +269,7 @@ return_fractions <- read_csv(here("PointSourceData", "Abstractions",
                                   "data_in", "use_code_ret_frac.csv"),
                              col_types = c("nn")) %>% 
   rename(`Use Code` = Use_Code) %>% 
-  distinct(`Use Code`, .keep_all = T)
+  distinct(`Use Code`, .keep_all = TRUE)
 
 
 message("✅Returns data collated")
@@ -288,7 +290,11 @@ rm(
 # before continuing to process abstractions, check that the abstraction data is
 # in alignment with model forcing data
 
-latest_return_yr <- lubridate::year(max(all_returns$`Abstraction Date`))
+latest_return_yr <- lubridate::year(
+  max(
+    all_returns$`Abstraction Date`
+    )
+  )
 
 if (latest_return_yr < forcing_year) {
   
