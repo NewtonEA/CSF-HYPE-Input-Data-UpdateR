@@ -72,19 +72,21 @@ forcing_year <- forcing_metadata$latest_forcing_year
 
 
 # ============================================================
-# read in and merge all returns  Excel workbooks and/or CSV files
+# Read in and merge all returns Excel workbooks and/or CSV files
 # ============================================================
+
 message("📚Reading Abstraction returns workbooks")
 flush.console()
 
-# find and list all the various returns workbooks 
+# Find Excel workbooks
 file.list <- list.files(
   returns_dir,
-  pattern='*.xlsx',
+  pattern = "\\.xlsx$",
   recursive = TRUE,
-  full.names = TRUE)
+  full.names = TRUE
+)
 
-# find any CSV returns files
+# Find CSV files
 csv.list <- list.files(
   returns_dir,
   pattern = "\\.csv$",
@@ -92,80 +94,156 @@ csv.list <- list.files(
   full.names = TRUE
 )
 
-# read the first sheet of all workbooks
-df.list1 <- lapply(file.list, read_excel, progress = TRUE)
-
-#extract column names
-headers <- colnames(df.list1[[1]])
-
-#some workbooks have 2nd and 3rd sheets of return data, but not all
-#check which workbooks have 2+ sheets 
-n_sheets <- lapply(file.list, excel_sheets) %>% lengths()
-
-#read all the second sheets in
-df.list2 <- data.frame()
-
-for (i in 1:length(n_sheets)) {
-  if (n_sheets[i] == 2) {
-    df_i <- read_excel(file.list[i], sheet = 2, col_names = headers) 
-    df.list2 <- bind_rows(df.list2, df_i)
-  }
-}
-
-# read all 3rd sheets in 
-
-df.list3 <- data.frame()
-
-for (i in 1:length(n_sheets)) {
-  if (n_sheets[i] == 3) {
-    df_i <- read_excel(file.list[i], sheet = 3, col_names = headers) 
-    df.list3 <- bind_rows(df.list3, df_i)
-  }
+# Check at least one input exists
+if (length(file.list) == 0 && length(csv.list) == 0) {
+  stop(
+    "❌ No abstraction returns files (.xlsx or .csv) found in returns_data"
+  )
 }
 
 # ============================================================
-# Read any CSV returns files 
+# Establish master column structure
 # ============================================================
 
-if (length(csv.list) > 0) {
+if (length(file.list) > 0) {
   
-  df.csv <- lapply(csv.list, function(f) {
-    
-    tmp <- read_csv(
-      f,
-      show_col_types = FALSE,
-      progress = FALSE
+  headers <- names(
+    read_excel(
+      file.list[1],
+      sheet = 1,
+      n_max = 0
     )
+  )
+  
+} else {
+  
+  headers <- names(
+    read_csv(
+      csv.list[1],
+      n_max = 0,
+      show_col_types = FALSE
+    )
+  )
+  
+}
+
+# ============================================================
+# Helper function
+# ============================================================
+
+standardise_cols <- function(df, headers) {
+  
+  missing_cols <- setdiff(headers, names(df))
+  
+  if (length(missing_cols) > 0) {
+    df[missing_cols] <- NA
+  }
+  
+  df[, headers, drop = FALSE] %>%
+    mutate(across(everything(), as.character))
+  
+}
+
+# ============================================================
+# Read all Excel sheets from all workbooks
+# ============================================================
+
+if (length(file.list) > 0) {
+  
+  excel_returns <- lapply(file.list, function(f) {
     
-    # Ensure same columns as Excel imports
-    missing_cols <- setdiff(headers, names(tmp))
+    sheets <- excel_sheets(f)
     
-    if (length(missing_cols) > 0) {
-      tmp[missing_cols] <- NA
-    }
-    
-    tmp[, headers, drop = FALSE]
+    lapply(sheets, function(s) {
+      
+      read_excel(
+        f,
+        sheet = s
+      ) %>%
+        standardise_cols(headers)
+      
+    }) %>%
+      bind_rows()
     
   }) %>%
     bind_rows()
   
 } else {
   
-  df.csv <- tibble()
+  excel_returns <- tibble()
   
 }
+
+# ============================================================
+# Read all CSV files
+# ============================================================
+
+if (length(csv.list) > 0) {
+  
+  csv_returns <- lapply(csv.list, function(f) {
+    
+    read_csv(
+      f,
+      show_col_types = FALSE
+    ) %>%
+      standardise_cols(headers)
+    
+  }) %>%
+    bind_rows()
+  
+} else {
+  
+  csv_returns <- tibble()
+  
+}
+
+# ============================================================
+# Combine Excel and CSV returns
+# ============================================================
+
+all_returns <- bind_rows(
+  excel_returns,
+  csv_returns
+)
+
+
 
 # the spatial information for abstractions come in seperate workbooks (WQ request ....details), 
 # all these workbooks should be added to the returns_details folder
 
-details_files <- list.files(here("PointSourceData", "Abstractions",
-                                 "data_in", "returns_details"), full.names = T)
+details_files <- list.files(
+  here("PointSourceData", "Abstractions",
+       "data_in", "returns_details"),
+  full.names = TRUE
+)
 
-#merge all details files - ignore the warnings, they are parsing issues that affect fields not needed here
 df.details <- lapply(details_files, function(file) {
-  suppressWarnings(read_excel(file, progress = TRUE))
-}) %>% 
-  bind_rows() %>% 
+  
+  ext <- tolower(tools::file_ext(file))
+  
+  df <- if (ext %in% c("xlsx", "xls")) {
+    
+    suppressWarnings(
+      read_excel(file, progress = TRUE)
+    )
+    
+  } else if (ext == "csv") {
+    
+    suppressWarnings(
+      read_csv(file, show_col_types = FALSE)
+    )
+    
+  } else {
+    
+    return(NULL)
+    
+  }
+  
+  df %>%
+    mutate(across(everything(), as.character))
+  
+}) %>%
+  bind_rows() %>%
   distinct(`Licence No.`, `Point ID`, .keep_all = TRUE)
 
 #convert the abstraction point NGRs to XYs
@@ -191,16 +269,20 @@ return_fractions <- read_csv(here("PointSourceData", "Abstractions",
   rename(`Use Code` = Use_Code) %>% 
   distinct(`Use Code`, .keep_all = T)
 
-# combine all returns (Excel + CSV)
-all_returns <- bind_rows(
-  bind_rows(df.list1, df.list2, df.list3),
-  df.csv
-)
 
 message("✅Returns data collated")
 flush.console()
 
-rm(df.list1, df.list2, df.list3, df_i)
+rm(
+  list = intersect(
+    c(
+      "excel_returns",
+      "csv_returns",
+      "headers"
+    ),
+    ls()
+  )
+)
 
 
 # before continuing to process abstractions, check that the abstraction data is
