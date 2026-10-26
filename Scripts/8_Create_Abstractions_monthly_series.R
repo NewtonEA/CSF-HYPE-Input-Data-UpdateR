@@ -269,7 +269,7 @@ df.details <- df.details %>%
 return_fractions <- read_csv(here("PointSourceData", "Abstractions", 
                                   "data_in", "use_code_ret_frac.csv"),
                              col_types = c("nn")) %>% 
-  rename(`Use Code` = Use_Code) %>% 
+  mutate(`Use Code` = as.character(Use_Code)) %>% 
   distinct(`Use Code`, .keep_all = TRUE)
 
 
@@ -366,6 +366,8 @@ all_returns <- merge(
 
 # adjust quantities to account for fraction assumed to be returned locally
 all_returns[, ret_frac := fifelse(is.na(ret_frac), 0, ret_frac)]
+
+all_returns[, `Return Qty` := as.numeric(`Return Qty`)]
 
 all_returns[, Abs_Qty_raw := fifelse(
   ret_frac == 0,
@@ -915,3 +917,4 @@ declared_outputs <- c(
 )
 
 declared_outputs
+
