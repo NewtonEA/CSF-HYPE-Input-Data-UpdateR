@@ -481,14 +481,13 @@ det  <- sub("^\\d+_", "", col_names)
 # Replace column names with DETs
 setnames(int_PSMonthly_ts, det)
 
-# Create first row with PSIDs
-psid_row <- as.list(psid)
+#create PSID row
+psid_row <- as.data.table(as.list(psid))
+names(psid_row) <- names(int_PSMonthly_ts)
 
-# Prepend the PSID row
-int_PSMonthly_ts <- rbindlist(
-  list(psid_row, int_PSMonthly_ts),
-  use.names = TRUE,
-  fill = TRUE
+int_PSMonthly_ts <- rbind(
+  as.data.frame(psid_row, check.names = FALSE),
+  as.data.frame(int_PSMonthly_ts, check.names = FALSE)
 )
 
 message("✅ HYPE Intermittent PSMonthlySeries has been created!")
