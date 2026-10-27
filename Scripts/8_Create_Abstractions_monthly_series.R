@@ -427,6 +427,12 @@ flush.console()
 
 setkey(df.details, Licence_no, Point_ID, Source_Type)
 
+#convert dates to same date format 
+all_returns[, Date := as.IDate(
+  sub(" .*", "", gsub("/", "-", Date)),
+  format = "%Y-%m-%d"
+)]
+
 # conversion from m3/month to m3/s based on: 
 # standardised month = 30.44 days == 2629800 seconds
 
