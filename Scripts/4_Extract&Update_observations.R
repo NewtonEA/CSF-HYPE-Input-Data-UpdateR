@@ -126,7 +126,7 @@ append_unique_notations <- function(existing_df, new_notations) {
   bind_rows(existing_df, new_df) %>% distinct(notation) %>% arrange(notation)
 }
 
-# Clean and reshape member rows to your canonical schema
+# Clean and reshape member rows 
 flatten_and_clean <- function(df) {
   if (is.null(df) || nrow(df) == 0) return(tibble())
   df <- as_tibble(df)

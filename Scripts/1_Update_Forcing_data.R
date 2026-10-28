@@ -300,26 +300,35 @@ for (rain_nc in rain_files) {
   all_pobs_list[[rain_nc]] <- pobs_dt
 }
 
-# Combine all months/days into one table
-new_pobs <- rbindlist(all_pobs_list)
-setorder(new_pobs, DATE)
+if (length(all_pobs_list) > 0) {
+  # Combine all months/days into one table
+  new_pobs <- rbindlist(all_pobs_list)
+  setorder(new_pobs, DATE)
 
-# Convert POSIXct → Date → IDate (to match pobs_old)
-new_pobs[, DATE := as.IDate(DATE)]
+  # Convert POSIXct → Date → IDate (to match pobs_old)
+  new_pobs[, DATE := as.IDate(DATE)]
 
-# Round all columns except DATE to 2 decimal places
-num_cols <- setdiff(names(new_pobs), "DATE")
-new_pobs[, (num_cols) := lapply(.SD, round, 2), .SDcols = num_cols]
+  # Round all columns except DATE to 2 decimal places
+  num_cols <- setdiff(names(new_pobs), "DATE")
+  new_pobs[, (num_cols) := lapply(.SD, round, 2), .SDcols = num_cols]
 
-# Append to old Pobs and remove potential duplicate dates
-Pobs_updated <- rbind(Pobs_old, new_pobs)
-Pobs_updated <- unique(Pobs_updated, by = "DATE")  # keep first occurrence
+  # Append to old Pobs and remove potential duplicate dates
+  Pobs_updated <- rbind(Pobs_old, new_pobs)
+  Pobs_updated <- unique(Pobs_updated, by = "DATE")  # keep first occurrence
 
-# Write back to file
-fwrite(Pobs_updated, file.path(rain_dir, "Pobs.txt"))
+  # Write back to file
+  fwrite(Pobs_updated, file.path(rain_dir, "Pobs.txt"))
 
-cat("✔ Pobs.txt updated with new rainfall data.\n")
-
+  cat("✔ Pobs.txt updated with new rainfall data.\n")
+  
+} else {
+  
+  #retain exisiting file if nothing to update
+  Pobs_updated <- copy(Pobs_old)
+  
+  cat("✔ No new rainfall data found. Existing Pobs.txt retained.\n")
+  
+}
 
 # ============================================================
 #  Update Tobs - daily mean temperature per sub-basin
@@ -427,24 +436,36 @@ for (i in seq_along(tasmin_files)) {
 }
 
 # Combine all temperature data
-new_tobs <- rbindlist(all_tobs_list)
-setorder(new_tobs, DATE)
 
-# Convert DATE to IDate
-new_tobs[, DATE := as.IDate(DATE)]
-
-# Round to 2 decimal places
-num_cols <- setdiff(names(new_tobs), "DATE")
-new_tobs[, (num_cols) := lapply(.SD, round, 2), .SDcols = num_cols]
-
-# Append to old Tobs and remove duplicates
-Tobs_updated <- rbind(Tobs_old, new_tobs)
-Tobs_updated <- unique(Tobs_updated, by = "DATE")
-
-# Write back to file
-fwrite(Tobs_updated, file.path(temp_dir, "Tobs.txt"))
-
-cat("✔ Tobs.txt updated with new temperature data.\n")
+if (length(all_tobs_list) > 0) {
+  # Combine all months/days into one table
+  new_tobs <- rbindlist(all_tobs_list)
+  setorder(new_pobs, DATE)
+  
+  # Convert POSIXct → Date → IDate (to match tobs_old)
+  new_tobs[, DATE := as.IDate(DATE)]
+  
+  # Round all columns except DATE to 2 decimal places
+  num_cols <- setdiff(names(new_tobs), "DATE")
+  new_tobs[, (num_cols) := lapply(.SD, round, 2), .SDcols = num_cols]
+  
+  # Append to old Pobs and remove potential duplicate dates
+  Tobs_updated <- rbind(Tobs_old, new_tobs)
+  Tobs_updated <- unique(Tobs_updated, by = "DATE")  # keep first occurrence
+  
+  # Write back to file
+  fwrite(Tobs_updated, file.path(rain_dir, "Tobs.txt"))
+  
+  cat("✔ Tobs.txt updated with new temperature data.\n")
+  
+} else {
+  
+  #retain exisiting file if nothing to update
+  Tobs_updated <- copy(Tobs_old)
+  
+  cat("✔ No new temperature data found. Existing Tobs.txt retained.\n")
+  
+}
 
 
 
@@ -486,3 +507,4 @@ declared_outputs <- c(
 
 declared_outputs
 }
+
