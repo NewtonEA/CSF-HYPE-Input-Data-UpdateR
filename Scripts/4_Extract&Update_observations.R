@@ -78,6 +78,11 @@ if (length(missing_inputs) > 0) {
 message("✅ All required input files present.")
 flush.console()
 
+# record baseline file paths
+
+eff_base_file <-  list.files(cache_dir, pattern = "^HYPE_EFFLUENT_MONITORING_DATA_.*\\.rds$", full.names = TRUE)
+xob_base_file <-  list.files(cache_dir, pattern = "^HYPE_XOBS_DATA_.*\\.rds$", full.names = TRUE)
+
 # ============================================================
 # Helper functions (top-level for futures)
 # ============================================================
@@ -667,9 +672,6 @@ xobs_log_file <- xobs$log_file
 # Declare outputs
 # ============================================================
 
-message("\n✅ Effluent + Xobs update complete")
-flush.console()
-
 declared_outputs <- c(
   eff_new_file,
   eff_log_file,
@@ -679,3 +681,14 @@ declared_outputs <- c(
 )
 
 declared_outputs
+
+# ============================================================
+# Finally, remove old baseline files 
+# ============================================================
+
+unlink(eff_base_file, force = TRUE)
+unlink(xob_base_file, force = TRUE)
+
+message("\n✅ Effluent + Xobs update complete")
+flush.console()
+
