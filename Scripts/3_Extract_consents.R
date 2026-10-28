@@ -1,6 +1,5 @@
 # ============================================================
 #
-### Script written and tested by Tom Newton, Dec 2025
 ### NOTE: 
 # Access ODBC drivers must be installed for the Access connection to work. 
 #
