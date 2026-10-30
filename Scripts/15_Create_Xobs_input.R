@@ -202,3 +202,11 @@ fwrite(
 
 message("✅ Xobs.txt written to:  ", outfile)
 flush.console()
+
+
+# ============================================================
+# Declared outputs
+# ============================================================
+declared_outputs <- outfile
+declared_outputs
+
