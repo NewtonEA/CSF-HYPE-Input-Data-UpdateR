@@ -179,7 +179,7 @@ dt_list <- c(
 )
 
 merged_dt <- data.table::as.data.table(
-  do.call(cbind, dt_list)
+  do.call(cbind, unname(dt_list))
 )
 # ============================================================
 # Fill missing dates / gaps with -9999 (explicit missing flag)
