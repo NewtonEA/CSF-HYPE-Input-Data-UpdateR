@@ -64,9 +64,9 @@ psmonthly_txt_path <- here(out_dir, "PSMonthlySeries.txt")
 psdata_txt_path    <- here(out_dir, "PointSourceData.txt")
 
 # ============================================================
-# Helper: read PSMonthlySeries (Format A) and normalise to merge-safe names
+# Helper: read PSMonthlySeries and normalise to merge-safe names
 #
-# Expected input format (as confirmed from your outputs):
+# Expected input format 
 #   - Column names are variable names repeated per PSID block (dup names)
 #   - Row 1 contains PSIDs (0 in Date col, then PSID repeated per variable)
 #   - Row 2 onwards are data (row 2 Date ~ "200001")
