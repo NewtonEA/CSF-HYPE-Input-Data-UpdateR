@@ -317,7 +317,7 @@ if (length(all_pobs_list) > 0) {
   Pobs_updated <- unique(Pobs_updated, by = "DATE")  # keep first occurrence
 
   # Write back to file
-  fwrite(Pobs_updated, file.path(rain_dir, "Pobs.txt"))
+  fwrite(Pobs_updated, file.path(rain_dir, "Pobs.txt"),sep = "\t")
 
   cat("✔ Pobs.txt updated with new rainfall data.\n")
   
@@ -325,6 +325,8 @@ if (length(all_pobs_list) > 0) {
   
   #retain exisiting file if nothing to update
   Pobs_updated <- copy(Pobs_old)
+  
+  fwrite(Pobs_updated, file.path(rain_dir, "Pobs.txt"),sep = "\t")
   
   cat("✔ No new rainfall data found. Existing Pobs.txt retained.\n")
   
@@ -454,7 +456,7 @@ if (length(all_tobs_list) > 0) {
   Tobs_updated <- unique(Tobs_updated, by = "DATE")  # keep first occurrence
   
   # Write back to file
-  fwrite(Tobs_updated, file.path(rain_dir, "Tobs.txt"))
+  fwrite(Tobs_updated, file.path(rain_dir, "Tobs.txt"), sep = "\t")
   
   cat("✔ Tobs.txt updated with new temperature data.\n")
   
@@ -462,6 +464,8 @@ if (length(all_tobs_list) > 0) {
   
   #retain exisiting file if nothing to update
   Tobs_updated <- copy(Tobs_old)
+  
+  fwrite(Tobs_updated, file.path(rain_dir, "Tobs.txt"), sep = "\t")
   
   cat("✔ No new temperature data found. Existing Tobs.txt retained.\n")
   
