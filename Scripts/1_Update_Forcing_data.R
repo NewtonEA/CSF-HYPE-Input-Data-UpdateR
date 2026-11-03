@@ -456,7 +456,7 @@ if (length(all_tobs_list) > 0) {
   Tobs_updated <- unique(Tobs_updated, by = "DATE")  # keep first occurrence
   
   # Write back to file
-  fwrite(Tobs_updated, file.path(rain_dir, "Tobs.txt"), sep = "\t")
+  fwrite(Tobs_updated, file.path(temp_dir, "Tobs.txt"), sep = "\t")
   
   cat("✔ Tobs.txt updated with new temperature data.\n")
   
@@ -465,7 +465,7 @@ if (length(all_tobs_list) > 0) {
   #retain exisiting file if nothing to update
   Tobs_updated <- copy(Tobs_old)
   
-  fwrite(Tobs_updated, file.path(rain_dir, "Tobs.txt"), sep = "\t")
+  fwrite(Tobs_updated, file.path(temp_dir, "Tobs.txt"), sep = "\t")
   
   cat("✔ No new temperature data found. Existing Tobs.txt retained.\n")
   
