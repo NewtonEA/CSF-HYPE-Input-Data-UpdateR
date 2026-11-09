@@ -86,7 +86,7 @@ xob_dt <- dcast(
 # ============================================================
 # Notes:
 # - reSS: mg/L already (no conversion)
-# - reT1: convert cfu/100ml -> cfu/ml => divide by 100
+# - reT1/reIE: convert cfu/100ml -> cfu/ml => divide by 100
 # - reT2: temperature already
 # - reSP/reTP/reIN: mg/L -> ug/L => * 1000
 
@@ -96,7 +96,9 @@ xob_dt[
   `:=`(
     reSS = get("0135"),
     reT1 = get("2348") / 100,
+    reIE = get("3723") / 100, # temporarily reIE until additional tracer slots added to model 
     reT2 = get("0076"),
+    
     
     reSP = get("0180") * 1000,
     reTP = fifelse(!is.na(get("0348")), get("0348"), get("0192")) * 1000,
@@ -111,10 +113,10 @@ xob_dt[
 ]
 
 # Keep only required output columns
-xob_dt <- xob_dt[, .(SUBID, date, reIN, reSP, reTP, reSS, reT1, reT2)]
+xob_dt <- xob_dt[, .(SUBID, date, reIN, reSP, reTP, reSS, reT1, reT2, reIE)]
 
 # Replace NA in substances with -9999
-substance_cols <- c("reIN","reSP","reTP","reSS","reT1","reT2")
+substance_cols <- c("reIN","reSP","reTP","reSS","reT1","reT2", "reIE")
 for (cc in substance_cols) set(xob_dt, which(is.na(xob_dt[[cc]])), cc, -9999)
 
 # ============================================================
