@@ -146,7 +146,7 @@ for (cc in substance_cols) {
 # Reshape to Xobs wide: one column per (substance, SUBID)
 # ============================================================
 
-substance_order <- c("reIN","reSP","reTP","reSS","reT1","reT2")
+substance_order <- c("reIN","reSP","reTP","reSS","reT1","reT2", "reIE")
 
 xob_full <- melt(
   xob_full,
@@ -172,8 +172,8 @@ data_cols <- setdiff(names(xob_full), "date")
 var_row   <- c("date", sub("^.*__", "", data_cols))
 subid_row <- c("0",    sub("__.*$", "", data_cols))
 
-# Date format yyyymmdd
-xob_full[, date := format(date, "%Y%m%d")]
+# Date format yyyy-mm-dd
+xob_full[, date := format(date, "%Y-%m-%d")]
 
 # ============================================================
 # Write Xobs.txt in HYPE format
