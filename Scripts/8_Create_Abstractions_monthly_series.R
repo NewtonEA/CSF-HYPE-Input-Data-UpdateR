@@ -1,6 +1,5 @@
 # ============================================================
 # CSF-HYPE Abstractions PSMonthlySeries updater
-#  Revised and Tested Jan 2026 - Tom Newton
 # ============================================================
 #
 # This script builds monthly abstraction point-source time series for HYPE
@@ -466,7 +465,9 @@ abs_monthly <- all_returns[
   df.details, on = .(Licence_no, Point_ID, Source_Type),
   allow.cartesian = TRUE
 ][
-  !is.na(SUBID) & Abs_rate <= 1 #update Nov 2026 to remove large abstractions (>1cumecs)
+  !is.na(SUBID)
+][
+  , Abs_rate := pmin(Abs_rate, 1) #update Nov 2026 to remove large abstractions (>1cumecs)
 ]
 
 returned_quantities <- all_returns[
@@ -481,7 +482,9 @@ returned_quantities <- all_returns[
   df.details, on = .(Licence_no, Point_ID, Source_Type),
   allow.cartesian = TRUE
 ][
-  !is.na(SUBID) & Source_Type == "GW" & Return_rate <= 1 
+  !is.na(SUBID) & Source_Type == "GW" 
+][
+  , Return_rate := pmin(Return_rate, 1)
 ]
 
 
@@ -784,9 +787,11 @@ Year = seq(2000, as.numeric(str_sub(max(returns_ts$Date_0),1,4)))
 
 wrgis_ts <- expand.grid(Year = Year, Month = Month) %>% 
   arrange(Year, Month) %>% 
-  inner_join(wrgis_monthly, by ="Month", relationship = "many-to-many") %>% 
-  mutate(Date_0 = as.character(paste0(Year, Month)), 
-         Abs_rate = Abs_qty / 2629800) %>% 
+  inner_join(wrgis_monthly, by = "Month", relationship = "many-to-many") %>% 
+  mutate(
+    Date_0 = as.character(paste0(Year, Month)), 
+    Abs_rate = pmin(Abs_qty / 2629800, 1) # reduced large abstractions to 1 cumec Nov 2026
+  ) %>% 
   inner_join(PSD_wrgis, by = c("SUBID", "Source_Type"), relationship = "many-to-many") %>%
   mutate(header = paste0("Flow_", PSID)) %>%
   select(Date_0, Abs_rate, header) %>% 
@@ -796,8 +801,10 @@ wrgis_ts <- expand.grid(Year = Year, Month = Month) %>%
 wrgis_ts_gw_returned <- expand.grid(Year = Year, Month = Month) %>% 
   arrange(Year, Month) %>% 
   inner_join(wrgis_gw_returned_monthly, by ="Month", relationship = "many-to-many") %>% 
-  mutate(Date_0 = as.character(paste0(Year, Month)), 
-         Abs_rate = Abs_qty / 2629800) %>% 
+  mutate(
+    Date_0 = as.character(paste0(Year, Month)), 
+    Abs_rate = pmin(Abs_qty / 2629800, 1) # reduced large abstractions to 1 cumec Nov 2026
+  ) %>%
   inner_join(PSD_wrgis, by = c("SUBID", "Source_Type"), relationship = "many-to-many") %>%
   mutate(header = paste0("Flow_", PSID)) %>%
   select(Date_0, Abs_rate, header) %>% 
