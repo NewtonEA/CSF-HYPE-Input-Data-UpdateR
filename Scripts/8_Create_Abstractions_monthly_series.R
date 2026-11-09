@@ -466,7 +466,7 @@ abs_monthly <- all_returns[
   df.details, on = .(Licence_no, Point_ID, Source_Type),
   allow.cartesian = TRUE
 ][
-  !is.na(SUBID)
+  !is.na(SUBID) & Abs_rate <= 1 #update Nov 2026 to remove large abstractions (>1cumecs)
 ]
 
 returned_quantities <- all_returns[
@@ -481,7 +481,7 @@ returned_quantities <- all_returns[
   df.details, on = .(Licence_no, Point_ID, Source_Type),
   allow.cartesian = TRUE
 ][
-  !is.na(SUBID) & Source_Type == "GW"
+  !is.na(SUBID) & Source_Type == "GW" & Return_rate <= 1 
 ]
 
 
