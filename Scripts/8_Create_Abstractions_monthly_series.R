@@ -264,6 +264,24 @@ df.details <- df.details %>%
   st_drop_geometry() %>% 
   mutate(`Point ID` = as.numeric(`Point ID`))
 
+#abstractions that fall on the boundary will be assigned two (or more) SUBIDs
+# we can check them - as of 2026 these are all GW boreholes. For now we'll just not use them. 
+multi_points <- df.details %>% 
+  st_drop_geometry() %>%
+  group_by(`Licence No.`, `Point ID`) %>%
+  summarise(
+    n_subbasins = n_distinct(SUBID),
+    SUBIDs = paste(unique(SUBID), collapse = ", "),
+    .groups = "drop"
+  ) %>%
+  filter(n_subbasins > 1)
+
+df.details <- df.details %>%
+  anti_join(
+    multi_points %>% select(`Licence No.`, `Point ID`),
+    by = c("Licence No.", "Point ID")
+  )
+
 #load use code return fraction lookup
 
 return_fractions <- read_csv(here("PointSourceData", "Abstractions", 
@@ -321,7 +339,7 @@ if (latest_return_yr < forcing_year) {
 }
 
 # ============================================================
-# calculate abstraction quantities to use in HYPE, with adjustements
+# calculate abstraction quantities to use in HYPE, with adjustments
 # ============================================================
 
 # An abstraction licence can have multiple abstraction points (some up to ca.50)
