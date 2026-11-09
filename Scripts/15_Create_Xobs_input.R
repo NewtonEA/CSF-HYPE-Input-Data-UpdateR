@@ -64,6 +64,7 @@ xob_dt[MEAS_SIGN == "<", MEAS_RESULT := MEAS_RESULT * 0.5]
 setkey(site_lut, notation)
 setkey(xob_dt, SMPT_USER_REFERENCE)
 xob_dt <- site_lut[xob_dt, on = .(notation = SMPT_USER_REFERENCE)]
+xob_dt <- xob_dt[!is.na(SUBID)] # removes any sites in the extract that shouldn't be in Xobs 
 
 # Daily mean per SUBID-date-determinand
 xob_dt <- xob_dt[
