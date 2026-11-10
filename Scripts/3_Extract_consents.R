@@ -734,6 +734,7 @@ dfs_list <- list(consents_processed, Welsh_consents)
 dfs_list <- harmonize_column_types(dfs_list, type = "character")
 
 Final_consents_to_use <- bind_rows(dfs_list) %>%
+  filter(!is.na(SUBID)) %>% 
   distinct(); message("✅ English and Welsh consents combined successfully ")
 
 out_rds <- file.path(
@@ -752,7 +753,7 @@ Final_consents_to_use %>%
   filter(!is.na(EFF_SAMPLE_POINT)) %>%
   distinct(EFF_SAMPLE_POINT, EA_REGION) %>%
   mutate(notation = paste0(EA_REGION, "-", EFF_SAMPLE_POINT)) %>%
-  readr::write_csv(wims_file); message(" ✅ Wrote Wffluent monitoring sites CSV to: ", wims_file)
+  readr::write_csv(wims_file); message(" ✅ Effluent monitoring sites CSV written to: ", wims_file)
 
 # Done
 message(" ✅  All consents successfully extracted and prepared " )
