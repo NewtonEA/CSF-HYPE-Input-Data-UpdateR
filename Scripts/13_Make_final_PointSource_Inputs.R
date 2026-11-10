@@ -182,15 +182,15 @@ merged_dt <- data.table::as.data.table(
   do.call(cbind, unname(dt_list))
 )
 # ============================================================
-# Fill missing dates / gaps with -9999 (explicit missing flag)
+# Fill missing dates / gaps with 0 
 # ============================================================
-message("🧱 Filling missing values with -9999...")
+message("🧱 Filling missing values with 0...") # amendment Nov 2026 - the -9999 missing flag was being read by HYPE so replacing with 0 for now
 flush.console()
 
 data_cols <- setdiff(names(merged_dt), "Date")
 for (cc in data_cols) {
   idx <- which(is.na(merged_dt[[cc]]))
-  if (length(idx)) set(merged_dt, idx, cc, -9999)
+  if (length(idx)) set(merged_dt, idx, cc, 0)
 }
 
 # ============================================================
@@ -237,7 +237,7 @@ fwrite(
   psmonthly_txt_path,
   sep = "\t",
   quote = FALSE,
-  na = "-9999",
+  na = "0",
   col.names = FALSE,
   append = TRUE
 )
