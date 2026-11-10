@@ -143,8 +143,8 @@ qob_wide <- dcast(
   value.var = "q"
 )
 
-# Date format yyyymmdd
-qob_wide[, date := format(date, "%Y%m%d")]
+# Date format yyyy-mm-dd
+qob_wide[, date := format(date, "%Y-%m-%d")]
 
 # Header row
 header <- paste(c("date", names(qob_wide)[-1]), collapse = "\t")
