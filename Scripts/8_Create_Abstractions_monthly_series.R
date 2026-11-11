@@ -700,7 +700,7 @@ PSD_returns <- returns_monthly %>%
   filter(Source_Type != "TW") %>%
   mutate(PSID = seq(30000,length.out = nrow(.), by = 1),
          ps_type = -1, 
-         ps_source = case_when(Source_Type == "SW" ~ 1, 
+         ps_source = case_when(Source_Type == "SW" ~ 3, # Nov 26 - switched from 1 = main river to 3 = main river and its inflow
                                Source_Type == "GW" ~ 4))  
 
 returns_monthly <- returns_monthly %>% 
@@ -766,7 +766,7 @@ PSD_wrgis <- wrgis_monthly %>%
   filter(Source_Type != "TW") %>%
   mutate(PSID = seq(wrgis_psid_origin,length.out = nrow(.), by = 1),
          ps_type = -1, 
-         ps_source = case_when(Source_Type == "SW" ~ 1, 
+         ps_source = case_when(Source_Type == "SW" ~ 3, # Nov 26 - switched from 1 = main river to 3 = main river and its inflow
                                Source_Type == "GW" ~ 4))  
 
 wrgis_psid_origin_gw <- max(PSD_wrgis$PSID) + 1
@@ -775,7 +775,7 @@ PSD_wrgis_gw_returned <- wrgis_gw_returned_monthly %>%
   ungroup() %>% 
   select(SUBID, Source_Type, ts_source) %>% 
   distinct() %>%
-  mutate(ps_type = 5, ps_source = 3, # abstracts from GW discharges to SW
+  mutate(ps_type = 5, ps_source = 3, # abstracts from GW & discharges to SW
          PSID = seq(wrgis_psid_origin_gw,length.out = nrow(.), by = 1))
 
 PSD_wrgis <- bind_rows(PSD_wrgis, PSD_wrgis_gw_returned) ; rm(PSD_wrgis_gw_returned)
