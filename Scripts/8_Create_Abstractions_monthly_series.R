@@ -127,7 +127,7 @@ if (length(file.list) > 0) {
 }
 
 # ============================================================
-# Helper function to standardise sheets 
+# Helper functions to standardise sheets & dates
 # ============================================================
 
 standardise_cols <- function(df, headers) {
@@ -141,6 +141,48 @@ standardise_cols <- function(df, headers) {
   df[, headers, drop = FALSE] %>%
     mutate(across(everything(), as.character))
   
+}
+
+parse_abstraction_date <- function(x) {
+  
+  # Standardise input
+  x <- trimws(as.character(x))
+  x[x %in% c("", "NA", "NULL")] <- NA_character_
+  
+  # Remove time component (HH:MM or HH:MM:SS)
+  x <- sub("[ T][0-9]{2}:[0-9]{2}(:[0-9]{2})?.*$", "", x)
+  
+  # Initialise output
+  dates <- as.Date(rep(NA_character_, length(x)))
+  
+  # 1. Excel serial dates
+  is_excel <- !is.na(x) &
+    grepl("^[0-9]{5}(\\.0+)?$", x)
+  
+  dates[is_excel] <- as.Date(
+    as.numeric(x[is_excel]),
+    origin = "1899-12-30"
+  )
+  
+  # 2. Year-first dates: YYYY-MM-DD or YYYY/MM/DD
+  is_ymd <- !is.na(x) &
+    grepl("^[0-9]{4}[-/][0-9]{1,2}[-/][0-9]{1,2}$", x)
+  
+  dates[is_ymd] <- as.Date(
+    gsub("/", "-", x[is_ymd]),
+    format = "%Y-%m-%d"
+  )
+  
+  # 3. Day-first dates: DD-MM-YYYY or DD/MM/YYYY
+  is_dmy <- !is.na(x) &
+    grepl("^[0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{4}$", x)
+  
+  dates[is_dmy] <- as.Date(
+    gsub("/", "-", x[is_dmy]),
+    format = "%d-%m-%Y"
+  )
+  
+  return(dates)
 }
 
 # ============================================================
@@ -207,8 +249,37 @@ if (length(csv.list) > 0) {
 all_returns <- bind_rows(
   excel_returns,
   csv_returns
-) %>% 
-  mutate(`Point ID` = as.numeric(`Point ID`))
+) %>%
+  mutate(
+    `Point ID` = as.numeric(`Point ID`),
+    original_date = `Abstraction Date`,
+    `Abstraction Date` = parse_abstraction_date(`Abstraction Date`)
+  )
+
+# Identify records with non-empty but unparseable dates
+invalid_dates <- all_returns %>%
+  filter(
+    !is.na(original_date),
+    trimws(original_date) != "",
+    is.na(`Abstraction Date`)
+  )
+
+if (nrow(invalid_dates) > 0) {
+  warning(
+    "⚠️ ",
+    nrow(invalid_dates),
+    " abstraction records have unparseable dates. Examples: ",
+    paste(
+      head(unique(invalid_dates$original_date), 5),
+      collapse = ", "
+    )
+  )
+}
+
+# Remove missing/invalid dates
+all_returns <- all_returns %>%
+  filter(!is.na(`Abstraction Date`)) %>%
+  select(-original_date)
 
 # the spatial information for abstractions come in seperate workbooks (WQ request ....details), 
 # all these workbooks should be added to the returns_details folder
