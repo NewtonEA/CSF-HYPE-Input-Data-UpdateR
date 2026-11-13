@@ -122,11 +122,11 @@ EDM_matched <- inner_join(EDM_data, int_consents,
   group_by(EA_REGION, PERMIT_NUMBER) %>%
   mutate(
     EFFECTIVE_DATE = case_when(
-      if_any(Flow_m3s:T1_cfu_ml, ~ n_distinct(.) > 1) ~ EFFECTIVE_DATE,
+      if_any(Flow_m3s:G1_cfu_ml, ~ n_distinct(.) > 1) ~ EFFECTIVE_DATE,
       TRUE ~ min(EFFECTIVE_DATE, na.rm = TRUE)
     ),
     REVOCATION_DATE = case_when(
-      if_any(Flow_m3s:T1_cfu_ml, ~ n_distinct(.) > 1) ~ REVOCATION_DATE,
+      if_any(Flow_m3s:G1_cfu_ml, ~ n_distinct(.) > 1) ~ REVOCATION_DATE,
       TRUE ~ max(REVOCATION_DATE, na.rm = TRUE)
     ),
     # some returns have duration > hours in year; assume 1 spill = 1 day 
@@ -137,7 +137,7 @@ EDM_matched <- inner_join(EDM_data, int_consents,
   # remove variables that aren't needed and won't be accurate once made distinct
   select(-c(PERMIT_VERSION, ISSUED_DATE, OUTLET_NUMBER:EFF_SAMPLE_POINT)) %>%
   distinct(across(c(EA_REGION, PERMIT_NUMBER, EFFECTIVE_DATE, REVOCATION_DATE,
-                    Duration:Return_yr, Flow_m3s:T1_cfu_ml)), .keep_all = TRUE)
+                    Duration:Return_yr, Flow_m3s:G1_cfu_ml)), .keep_all = TRUE)
 
 n_matched <- nrow(EDM_matched)
 if (n_matched == 0) stop("❌ No EDM records matched to intermittent consents.")
@@ -172,7 +172,7 @@ flush.console()
 # Trim EDM_matched for later joins
 EDM_matched <- EDM_matched %>%
   select(EA_REGION, PERMIT_NUMBER, DISCHARGE_NGR, SUBID, EFFECTIVE_DATE,
-         REVOCATION_DATE, Flow_m3s:T1_cfu_ml)
+         REVOCATION_DATE, Flow_m3s:G1_cfu_ml)
 
 # ============================================================
 # Load rainfall (Pobs.txt) and filter to 2000 onwards + SUBIDs of interest
