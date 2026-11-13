@@ -33,6 +33,7 @@ required_inputs <- c(
              pattern = "^consent_discharges_used_HYPE_with_consented_means_.*\\.rds$",
              full.names = TRUE),
   here("PointSourceData", "Discharges", "data_in", "default_concentrations_by_industry_type.csv"),
+  here("PointSourceData", "Discharges", "data_in", "FIO_defaults_by_STW_treatment_type.csv"),
   here("PointSourceData", "Discharges", "data_in", "Fix_wrong_SUBIDs_lut_eco.txt"),
   here("PointSourceData", "Discharges", "data_out", "sites_for_quant_analysis.csv"),
   here("ForcingData", "_forcing_metadata.rds")
@@ -75,14 +76,31 @@ Final_consents_to_use <-   read_rds(
     )
   )
      
-# load HYPE defaults lookup 
+# load HYPE defaults lookups 
 
 HYPE_defaults <- read_csv(
   paste0(subdir,"/data_in/default_concentrations_by_industry_type.csv"),
   col_types = c("cnnnnnnnnc")) %>% 
   # replaces non-alphanumeric characters with space
   mutate(Industry_Type =  toupper(str_remove_all(Industry_Type,"[^[:alnum:]]"))) 
-  
+
+FIO_defaults <- read_csv(
+  here(
+    "PointSourceData", "Discharges", "data_in", "FIO_defaults_by_STW_treatment_type.csv"
+    )
+  )
+
+#create lookup of intermittent types 
+
+int_types <- c("Pumping Station on Sewerage Network (water company)",
+               "Pumping Stn on unadopted sewerage netwrk (not water co)",
+               "CSO on unadopted sewerage network (not water company)",
+               "Storm Tank CSO on Sewerage Network (water company)",
+               "Sewerage Network CSO (water company)",
+               "Sewerage Network Pumping Station (water company)") %>%
+  toupper() %>% 
+  str_remove_all("[^[:alnum:]]")
+
 # ============================================================
 # Select consented values,add defaults & convert to HYPE dets
 # ============================================================
@@ -91,10 +109,13 @@ message("❯❯❯❯ Applying consented values, defaults & converting to HYPE d
 flush.console()
 
 Final_consents_to_use <- Final_consents_to_use %>%
+  #create a new Industry Type variable changing everything to uppercase
+  #and remove all non alphabetical characters to ensure accurate filtering later
   mutate(Industry_Type = toupper(str_remove_all(
-    DSI_TYPE_DESCRIPTION, "[^[:alnum:]]"))) %>%
-  # join default by industry type
-  inner_join(HYPE_defaults, by=c("Industry_Type"))  %>%
+    DSI_TYPE_DESCRIPTION,"[^[:alnum:]]"))) %>%
+  # join defaults
+  inner_join(HYPE_defaults, by= "Industry_Type")  %>%
+  left_join(FIO_defaults, by = "EFF_TMEN_CODE") %>%
   # ensure all det fields are numeric and date fields are Date 
   mutate(
     across(
@@ -105,7 +126,41 @@ Final_consents_to_use <- Final_consents_to_use %>%
       .cols = matches("_mgl$|_mgl_d$|_m3s$|_m3s_d$|_cfu_ml_d$"),
       .fns = as.numeric
     )
-  )
+  ) %>% 
+  # add FIO defaults by treatment (overwrites old defaults by industry type)
+  mutate(T1_cfu_ml_d = case_when(
+    # Assign Base_EC_cfu where Link_description is present and no exclusion criteria apply;
+    # retain existing T1_cfu_ml_d values for excluded industry, effluent or discharge site types;
+    # assign 0 where Link_description is NA and no exclusion criteria apply.
+    Industry_Type %in% int_types |
+      EFFLUENT_TYPE %in% c("SB", "SC", "SD", "DA",
+                           "TI", "UB", "UC", "UD") |
+      DISCHARGE_SITE_TYPE_CODE %in% c("A3", "A4", "A8", "A7",
+                                      "SB", "SC", "SD", "DA",
+                                      "TI", "UB", "UC", "UD") ~ T1_cfu_ml_d,
+    
+    !is.na(Link_description) ~ Base_EC_cfu100ml / 100, #converted to cfu per ml
+    
+    is.na(Link_description) ~ 0
+    ),
+    # Add IE (as tracer G1) using EC:IE conversion factors:
+    # apply IE_high_factor to excluded industry, effluent and discharge site types;
+    # apply IE_base_factor to all other types.
+    G1_cfu_ml_d = case_when(
+      Industry_Type %in% int_types |
+        EFFLUENT_TYPE %in% c("SB", "SC", "SD", "DA",
+                             "TI", "UB", "UC", "UD") |
+        DISCHARGE_SITE_TYPE_CODE %in% c("A3", "A4", "A8", "A7",
+                                        "SB", "SC", "SD", "DA",
+                                        "TI", "UB", "UC", "UD") ~ T1_cfu_ml_d * IE_high_factor,
+      T1_cfu_ml_d == 0 ~ 0,
+      .default = T1_cfu_ml_d * IE_base_factor
+      ),
+    # a few records from the Welsh consents can't be matched to industry type 
+    # or treatment so convert them to 0
+    across(c(T1_cfu_ml_d, G1_cfu_ml_d), ~ tidyr::replace_na(.x, 0))
+    ) 
+    
 
 #create SMPT-defaults lookup for numeric sites 
 
@@ -113,7 +168,7 @@ SMPT_defaults <- Final_consents_to_use %>%
   filter(!is.na(EFF_SAMPLE_POINT)) %>% 
   #add EA region ID to sample point to align with API smpt notation
   mutate(EFF_SAMPLE_POINT = paste0(EA_REGION, "-", EFF_SAMPLE_POINT)) %>%
-  select(EFF_SAMPLE_POINT,Flow_m3s_d:T1_cfu_ml_d) %>% 
+  select(EFF_SAMPLE_POINT,Flow_m3s_d:T1_cfu_ml_d, G1_cfu_ml_d) %>% 
   distinct(EFF_SAMPLE_POINT, .keep_all = T) %>% 
   write_rds(paste0(subdir, "/data_out/HYPE_EFF_SMPT-Default_lut.rds"))
 
@@ -161,11 +216,12 @@ Final_consents_to_use <- Final_consents_to_use %>%
                             SS_mgl > 250 ~ 100, # reduce to 100 mgl as advised by Linda
                             T ~ SS_mgl),
          # discharges are never consented for FIOs so add defaults
-         # for selected discharge types and 0s for others
-         T1_cfu_ml = T1_cfu_ml_d) %>% 
+         # revised Nov 2026 from single default to different value depending on effluent treatment
+         T1_cfu_ml = T1_cfu_ml_d, 
+         G1_cfu_ml = G1_cfu_ml_d) %>% 
   select(SUBID,COMPANY_NAME:EFF_SAMPLE_POINT,Flow_m3s,
          IN_mgl, ON_mgl, SP_mgl, PP_mgl, TP_mgl, 
-         SS_mgl, T1_cfu_ml, geometry) %>% 
+         SS_mgl, T1_cfu_ml, G1_cfu_ml,Industry_Type, geometry) %>% 
   distinct()
 rm(HYPE_defaults)
 
@@ -175,21 +231,7 @@ rm(HYPE_defaults)
 message("❯❯❯❯ Separating intermittent and constant discharges...")
 flush.console()
 
-
-int_types <- c("Pumping Station on Sewerage Network (water company)",
-               "Pumping Stn on unadopted sewerage netwrk (not water co)",
-               "CSO on unadopted sewerage network (not water company)",
-               "Storm Tank CSO on Sewerage Network (water company)",
-               "Sewerage Network CSO (water company)",
-               "Sewerage Network Pumping Station (water company)") %>%
-  toupper() %>% str_remove_all("[^[:alnum:]]")
-
-
-intermittents <- Final_consents_to_use %>% 
-  #create a new Industry Type variable changing everything to uppercase
-  #and remove all non alphabetical characters to ensure accurate filtering
-  mutate(Industry_Type = toupper(str_remove_all(
-                                DSI_TYPE_DESCRIPTION,"[^[:alnum:]]"))) %>%
+intermittents <- Final_consents_to_use %>%
   filter(Industry_Type %in% int_types |
            EFFLUENT_TYPE %in% c("SB", "SC", "SD","DA",
                                 "TI", "UB", "UC", "UD")| 
